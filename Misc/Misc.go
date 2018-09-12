@@ -2,6 +2,7 @@ package Misc
 
 import (
 	"regexp"
+	"time"
 )
 
 func ValidatePattern(str string)(bool){
@@ -10,4 +11,8 @@ func ValidatePattern(str string)(bool){
 
 	}
 	return matched
+}
+
+func GetTime()(int64){
+	return time.Now().UnixNano() / 1000000
 }
