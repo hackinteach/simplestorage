@@ -1,7 +1,7 @@
 package ObjectManagement
 
 import (
-	. "../src/Misc"
+	. "../Misc"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"net/http"
