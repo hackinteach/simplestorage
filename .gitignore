@@ -1,6 +1,7 @@
 # Created by .ignore support plugin (hsz.mobi)
 ### Go template
 # Binaries for programs and plugins
+SimpleStorage
 *.exe
 *.exe~
 *.dll
