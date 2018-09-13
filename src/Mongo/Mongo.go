@@ -1,14 +1,15 @@
 package Mongo
 
 import (
-	. "../BucketManagement"
+	. "../Structure"
 	"gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 )
 
 var (
 	session          *mgo.Session
-	bucketCollection *mgo.Collection
-	objectCollection *mgo.Collection
+	BucketCollection *mgo.Collection
+	ObjectCollection *mgo.Collection
 )
 
 const (
@@ -24,11 +25,24 @@ func init() {
 	}
 
 	db := session.DB(DB)
-	bucketCollection = db.C("Bucket")
-	objectCollection = db.C("Object")
+	BucketCollection = db.C("Bucket")
+	ObjectCollection = db.C("Object")
+}
+
+func CheckBucketExist(bucketName string)(bool){
+	var buckets []Bucket
+	BucketCollection.Find(bson.M{"name":bucketName}).All(&buckets)
+
+	for _,b := range buckets{
+		if b.Name == bucketName {
+			return true
+		}
+	}
+	return false
 }
 
 func AddBucket(bucket Bucket) (bool) {
-	err := bucketCollection.Insert(bucket)
+	err := BucketCollection.Insert(bucket)
 	return err != nil
 }
+
