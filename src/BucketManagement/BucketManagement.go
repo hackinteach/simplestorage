@@ -1,23 +1,31 @@
 package BucketManagement
 
 import (
-	"encoding/json"
-	"github.com/gorilla/mux"
-	"gopkg.in/mgo.v2/bson"
+	. "../Misc"
+	. "../Mongo"
+	. "../Structure"
+	"github.com/mitchellh/mapstructure"
 	"net/http"
+	"strings"
 )
 
-type Bucket struct {
-	ID bson.ObjectId `bson:"_id,omitempty"`
-	Name string 	`bson:"name" json:"bucketName"`
-	Created int64	`bson:"created" json:"created"`
-	Modified int64	`bson:"modified" json:"modified"`
+func CreateBucket(w http.ResponseWriter, r *http.Request) {
+
+	var bucket Bucket
+	var tmp map[string]interface{}
+
+	tmp = make(map[string]interface{})
+
+	bucketName := strings.Replace(r.URL.Path,"/","",1)
+	tmp["Name"] = bucketName
+	tmp["Created"] = GetTime()
+	tmp["Modified"] = GetTime()
+	mapstructure.Decode(tmp,&bucket)
+	if ! CheckBucketExist(bucketName){
+		AddBucket(bucket)
+	}
 }
 
-func CreateBucket(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	json.NewEncoder(w).Encode(vars)
-}
 
 func DeleteBucket(w http.ResponseWriter, r *http.Request) {
 
