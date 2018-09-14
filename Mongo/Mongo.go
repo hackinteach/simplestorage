@@ -52,3 +52,13 @@ func RemoveBucket(name string)(bool){
 	err := BucketCollection.Remove(bson.M{"name":name})
 	return err == nil
 }
+
+func GetBucket(name string)(TempBucket){
+	var result TempBucket
+	BucketCollection.Find(bson.M{"name":name}).One(&result)
+	return result
+}
+
+func GetObjectList(bucketName string)([]Object){
+	return nil
+}
