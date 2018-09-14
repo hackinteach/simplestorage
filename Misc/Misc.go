@@ -27,7 +27,7 @@ func GetTime()(int64){
 	return time.Now().UnixNano() / 1000000
 }
 
-func MakeDirectory(name string)(bool){
+func MakeBucketDirectory(name string)(bool){
 	var fullPath = filepath.Join(BucketPath,name)
 	//log.Printf("path: %s",fullPath)
 	err := os.MkdirAll(fullPath, 511)

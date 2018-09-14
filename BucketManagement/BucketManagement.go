@@ -31,7 +31,7 @@ func CreateBucket(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Creating %s",bucketName)
 		add := AddBucket(bucket)
 		log.Printf("Added %s to MongoDB",bucketName)
-		mkdir := MakeDirectory(bucketName)
+		mkdir := MakeBucketDirectory(bucketName)
 
 		if add && mkdir {
 			var tmpBucket TempBucket
