@@ -1,13 +1,13 @@
 package Misc
 
 import (
+	"github.com/gorilla/mux"
 	"log"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
-	"strings"
 	"time"
 )
 
@@ -45,5 +45,5 @@ func RemoveDirectory(name string)(bool){
 }
 
 func GetBucketName(r *http.Request)(string) {
-	return strings.Replace(r.URL.Path,"/","",1)
+	return mux.Vars(r)["bucketName"]
 }
