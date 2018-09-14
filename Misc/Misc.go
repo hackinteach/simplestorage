@@ -1,10 +1,12 @@
 package Misc
 
 import (
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -30,4 +32,8 @@ func MakeDirectory(name string)(bool){
 	err := os.MkdirAll(fullPath, 511)
 	exec.Command("chmod","777",fullPath)
 	return err != nil
+}
+
+func GetBucketName(r *http.Request)(string) {
+	return strings.Replace(r.URL.Path,"/","",1)
 }
