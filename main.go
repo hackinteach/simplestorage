@@ -1,13 +1,13 @@
-package simplestorage
+package main
 
 import (
-	. "./BucketManagement"
-	. "./ObjectManagement"
 	_ "encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	. "simplestorage/BucketManagement"
+	. "simplestorage/ObjectManagement"
 )
 
 const (
