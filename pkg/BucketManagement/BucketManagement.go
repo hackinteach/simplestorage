@@ -23,6 +23,7 @@ func CreateBucket(w http.ResponseWriter, r *http.Request) {
 	mapstructure.Decode(tmp,&bucket)
 	if ! CheckBucketExist(bucketName){
 		AddBucket(bucket)
+		MakeDirectory(bucketName)
 	}
 }
 

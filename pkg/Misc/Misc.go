@@ -1,8 +1,14 @@
 package Misc
 
 import (
+	"os"
+	"path/filepath"
 	"regexp"
 	"time"
+)
+
+const (
+	BucketPath = "../buckets"
 )
 
 func ValidatePattern(str string)(bool){
@@ -15,4 +21,12 @@ func ValidatePattern(str string)(bool){
 
 func GetTime()(int64){
 	return time.Now().UnixNano() / 1000000
+}
+
+func MakeDirectory(name string)(bool){
+	var fullPath = filepath.Join("../data",name)
+
+	err := os.MkdirAll(fullPath, 666)
+
+	return err != nil
 }
