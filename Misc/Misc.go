@@ -2,13 +2,14 @@ package Misc
 
 import (
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"time"
 )
 
 const (
-	BucketPath = "../buckets"
+	BucketPath = "buckets/"
 )
 
 func ValidatePattern(str string)(bool){
@@ -24,9 +25,9 @@ func GetTime()(int64){
 }
 
 func MakeDirectory(name string)(bool){
-	var fullPath = filepath.Join("../data",name)
-
-	err := os.MkdirAll(fullPath, 666)
-
+	var fullPath = filepath.Join(BucketPath,name)
+	//log.Printf("path: %s",fullPath)
+	err := os.MkdirAll(fullPath, 511)
+	exec.Command("chmod","777",fullPath)
 	return err != nil
 }
