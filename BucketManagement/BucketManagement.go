@@ -71,9 +71,17 @@ func ListBucket(w http.ResponseWriter, r *http.Request) {
 	result = make(map[string]interface{})
 
 	var bucket = GetBucket(bucketName)
+
+	if bucket.Name == "" {
+		w.WriteHeader(400)
+	}
+
 	mapstructure.Decode(bucket,&result)
 
 	result["objects"] = GetObjectList(bucketName)
 
 	json.NewEncoder(w).Encode(result)
+
+	w.Header().Set("content-type","application/json")
+	w.WriteHeader(200)
 }
