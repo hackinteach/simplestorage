@@ -8,14 +8,13 @@ import (
 	. "simplestorage/Misc"
 	. "simplestorage/Mongo"
 	. "simplestorage/Structure"
-	"strings"
 )
 
 func CreateBucket(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type","application/json")
 	var bucket Bucket
 
-	bucketName := strings.Replace(r.URL.Path,"/","",1)
+	bucketName := GetBucketName(r)
 
 	var tmp map[string]interface{}
 	tmp = make(map[string]interface{})
@@ -32,14 +31,17 @@ func CreateBucket(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Creating %s",bucketName)
 		AddBucket(bucket)
 		log.Printf("Added %s to MongoDB",bucketName)
-		MakeDirectory(bucketName)
+		err := MakeDirectory(bucketName)
 
-		var tmpBucket TempBucket
-		mapstructure.Decode(tmp,&tmpBucket)
-		json.NewEncoder(w).Encode(tmpBucket)
-		w.WriteHeader(200)
+		if ! err {
+			var tmpBucket TempBucket
+			mapstructure.Decode(tmp,&tmpBucket)
+			json.NewEncoder(w).Encode(tmpBucket)
+			w.WriteHeader(200)
+		}else{
+			w.WriteHeader(400)
+		}
 	}else{
-		log.Printf("Bucket already exists")
 		w.WriteHeader(400)
 	}
 }
