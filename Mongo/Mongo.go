@@ -60,5 +60,6 @@ func GetBucket(name string)(TempBucket){
 }
 
 func GetObjectList(bucketName string)([]Object){
+	// @TODO Get object list from DB
 	return nil
 }
