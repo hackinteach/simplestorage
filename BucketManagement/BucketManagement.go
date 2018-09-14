@@ -65,5 +65,15 @@ func DeleteBucket(w http.ResponseWriter, r *http.Request) {
 }
 
 func ListBucket(w http.ResponseWriter, r *http.Request) {
+	var bucketName = GetBucketName(r)
 
+	var result map[string]interface{}
+	result = make(map[string]interface{})
+
+	var bucket = GetBucket(bucketName)
+	mapstructure.Decode(bucket,&result)
+
+	result["objects"] = GetObjectList(bucketName)
+
+	json.NewEncoder(w).Encode(result)
 }
