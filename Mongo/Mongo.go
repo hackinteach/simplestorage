@@ -43,6 +43,19 @@ func CheckBucketExist(bucketName string)(bool){
 	return false
 }
 
+func CheckObjectExist(name string)(bool){
+	var objects []Object
+	ObjectCollection.Find(bson.M{"name":name}).All(&objects)
+
+	for _,b := range objects{
+		if b.Name == name {
+			//log.Print("Found")
+			return true
+		}
+	}
+	return false
+}
+
 func AddBucket(bucket Bucket) (bool) {
 	err := BucketCollection.Insert(bucket)
 	return err == nil
