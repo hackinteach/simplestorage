@@ -35,6 +35,13 @@ func MakeBucketDirectory(name string)(bool){
 	return err == nil
 }
 
+func MakeObjectDirectory(bucket string, name string)(bool){
+	var fullPath = filepath.Join(BucketPath,bucket,"/",name)
+	err := os.Mkdir(fullPath,511)
+	exec.Command("chmod","777",fullPath)
+	return err == nil
+}
+
 func RemoveDirectory(name string)(bool){
 	var fullPath = filepath.Join(BucketPath,name)
 
