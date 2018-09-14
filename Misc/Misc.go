@@ -1,6 +1,7 @@
 package Misc
 
 import (
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -31,7 +32,16 @@ func MakeDirectory(name string)(bool){
 	//log.Printf("path: %s",fullPath)
 	err := os.MkdirAll(fullPath, 511)
 	exec.Command("chmod","777",fullPath)
-	return err != nil
+	return err == nil
+}
+
+func RemoveDirectory(name string)(bool){
+	var fullPath = filepath.Join(BucketPath,name)
+
+	err := os.Remove(fullPath)
+	log.Print("Removing")
+	log.Print(err)
+	return err == nil
 }
 
 func GetBucketName(r *http.Request)(string) {
