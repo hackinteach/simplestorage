@@ -3,6 +3,7 @@ package Mongo
 import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"log"
 	. "simplestorage/Structure"
 )
 
@@ -35,6 +36,7 @@ func CheckBucketExist(bucketName string)(bool){
 
 	for _,b := range buckets{
 		if b.Name == bucketName {
+			log.Print("Found")
 			return true
 		}
 	}
@@ -43,6 +45,10 @@ func CheckBucketExist(bucketName string)(bool){
 
 func AddBucket(bucket Bucket) (bool) {
 	err := BucketCollection.Insert(bucket)
-	return err != nil
+	return err == nil
 }
 
+func RemoveBucket(name string)(bool){
+	err := BucketCollection.Remove(bson.M{"name":name})
+	return err == nil
+}

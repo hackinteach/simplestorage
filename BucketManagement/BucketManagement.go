@@ -29,11 +29,11 @@ func CreateBucket(w http.ResponseWriter, r *http.Request) {
 	if ! CheckBucketExist(bucketName){
 		// Bucket can be create
 		log.Printf("Creating %s",bucketName)
-		AddBucket(bucket)
+		add := AddBucket(bucket)
 		log.Printf("Added %s to MongoDB",bucketName)
-		err := MakeDirectory(bucketName)
+		mkdir := MakeDirectory(bucketName)
 
-		if ! err {
+		if add && mkdir {
 			var tmpBucket TempBucket
 			mapstructure.Decode(tmp,&tmpBucket)
 			json.NewEncoder(w).Encode(tmpBucket)
