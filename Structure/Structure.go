@@ -8,7 +8,7 @@ type Bucket struct {
 	Created 	int64			`bson:"created" json:"created"`
 	Modified 	int64			`bson:"modified" json:"modified"`
 }
-
+// for returning purpose
 type TempBucket struct {
 	Name 		string 			`json:"name"`
 	Created 	int64			`json:"created"`
