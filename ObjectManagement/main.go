@@ -1,10 +1,10 @@
 package ObjectManagement
 
 import (
-	. "../Misc"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"net/http"
+	. "simplestorage/Misc"
 )
 
 func CreateTicket(w http.ResponseWriter, r *http.Request) {
