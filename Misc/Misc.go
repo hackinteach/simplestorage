@@ -47,3 +47,7 @@ func RemoveDirectory(name string)(bool){
 func GetBucketName(r *http.Request)(string) {
 	return mux.Vars(r)["bucketName"]
 }
+
+func GetObjectName(r *http.Request)(string){
+	return mux.Vars(r)["objectName"]
+}
