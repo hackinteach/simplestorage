@@ -2,9 +2,7 @@ package ObjectManagement
 
 import (
 	"encoding/json"
-	"github.com/gorilla/mux"
 	"github.com/mitchellh/mapstructure"
-	"log"
 	"net/http"
 	. "simplestorage/Misc"
 	. "simplestorage/Mongo"
@@ -13,7 +11,6 @@ import (
 
 func CreateTicket(w http.ResponseWriter, r *http.Request) {
 	bucketName := GetBucketName(r)
-	log.Printf("Bucketname: %s",bucketName)
 	objectName := GetObjectName(r)
 
 	buckExist := CheckBucketExist(bucketName)
@@ -42,14 +39,49 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func UploadAll(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	partNumber := r.URL.Query().Get("partNumber")
-	valid := ValidatePattern(partNumber)
-	if !valid{
+func UploadPart(w http.ResponseWriter, r *http.Request) {
+	bucketName := GetBucketName(r)
+	objectName := GetObjectName(r)
 
+	partNumber := r.URL.Query().Get("partNumber")
+	valid := ValidatePattern(partNumber,PART_NUM_PATTERN)
+
+	length := r.Header.Get("Content-Length")
+	md5 := r.Header.Get("Content-MD5")
+
+	var ret = map[string]string{
+		"md5": md5,
+		"length": length,
+		"partNumber": partNumber,
 	}
-	json.NewEncoder(w).Encode(vars)
+
+	w.Header().Set("Content-Type","application/json")
+
+	/* VALIDATE REQUEST */
+
+	if !valid{
+		ret["error"] = ERROR["InvalidPartNumber"]
+	}
+
+	if length == "" {
+		ret["error"] = ERROR["LengthMismatched"]
+	}
+
+	if md5 == "" {
+		ret["error"] = ERROR["MD5Mismatched"]
+	}
+
+	if !FindOjbect(bucketName,objectName) {
+		ret["error"] = ERROR["InvalidBucket"]
+	}
+
+	if ret["error"] == "" {
+		json.NewEncoder(w).Encode(ret)
+		w.WriteHeader(400)
+	}
+
+	/* PERFORM REQUEST */
+	//@TODO Make Part struct and create Object, add to db
 }
 
 func CompleteUpload(w http.ResponseWriter, r *http.Request) {
