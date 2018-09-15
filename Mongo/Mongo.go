@@ -72,7 +72,13 @@ func GetBucket(name string)(TempBucket){
 	return result
 }
 
-func GetObjectList(bucketName string)([]Object){
+func GetObjectList(bucketName string)([]TempObject){
 	// @TODO Get object list from DB
-	return nil
+	var result []TempObject
+	ObjectCollection.Find(bson.M{"bucket":bucketName}).All(&result)
+	return result
+}
+
+func CreateObject(object Object)(bool){
+	return ObjectCollection.Insert(object) == nil
 }
