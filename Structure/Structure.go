@@ -48,3 +48,7 @@ var ERROR = map[string]string {
 	"InvalidObjectName": "InvalidObjectName",
 	"InvalidBucket": "InvalidBucket",
 }
+
+const PART_NUM_PATTERN = `^([1-9][0-9]{0,3}|10000)$`
+const OBJ_NAME_PATTERN = `^(?!\.).[ \. | \_ | -| a-z | 0-9]*`
+const BUCK_NAME_PATTERN = `(^(?!\.)([a-z|1-9|\-|\_]){2,})`
