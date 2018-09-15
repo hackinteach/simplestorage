@@ -24,8 +24,6 @@ func CreateBucket(w http.ResponseWriter, r *http.Request) {
 
 	mapstructure.Decode(tmp,&bucket)
 
-
-
 	if ! CheckBucketExist(bucketName){
 		// Bucket can be create
 		log.Printf("Creating %s",bucketName)
@@ -37,6 +35,7 @@ func CreateBucket(w http.ResponseWriter, r *http.Request) {
 			var tmpBucket TempBucket
 			mapstructure.Decode(tmp,&tmpBucket)
 			json.NewEncoder(w).Encode(tmpBucket)
+			w.Header().Set("Content-Type","application/json")
 			w.WriteHeader(200)
 		}else{
 			w.WriteHeader(400)
@@ -45,7 +44,6 @@ func CreateBucket(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(400)
 	}
 }
-
 
 func DeleteBucket(w http.ResponseWriter, r *http.Request) {
 	var bucketName = GetBucketName(r)
@@ -80,8 +78,7 @@ func ListBucket(w http.ResponseWriter, r *http.Request) {
 
 	result["objects"] = GetObjectList(bucketName)
 
+	w.Header().Set("Content-Type","application/json")
 	json.NewEncoder(w).Encode(result)
-
-	w.Header().Set("content-type","application/json")
 	w.WriteHeader(200)
 }
