@@ -15,11 +15,8 @@ const (
 	BucketPath = "buckets/"
 )
 
-func ValidatePattern(str string)(bool){
-	matched, err := regexp.MatchString("^[1-9][0-9]{0,3}0?",str)
-	if err != nil{
-
-	}
+func ValidatePattern(str string, pat string)(bool){
+	matched, _ := regexp.MatchString(pat,str)
 	return matched
 }
 
