@@ -82,3 +82,14 @@ func GetObjectList(bucketName string)([]TempObject){
 func CreateObject(object Object)(bool){
 	return ObjectCollection.Insert(object) == nil
 }
+
+func FindOjbect(bucketName string, objectName string)(bool){
+	var result []Object
+	ObjectCollection.Find(bson.M{"bucket":bucketName}).All(&result)
+
+	for _,o := range result {
+		if o.Name == objectName {}
+		return true
+	}
+	return false
+}
