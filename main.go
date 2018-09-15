@@ -20,6 +20,7 @@ const (
 // our main function
 func main() {
 	router := mux.NewRouter()
+	var buckObj = fmt.Sprintf("%s%s",bucketPath,objectPath)
 
 	/* Bucket Management */
 	router.HandleFunc(bucketPath, CreateBucket).Queries("create","{create}").Methods("POST")
@@ -27,8 +28,8 @@ func main() {
 	router.HandleFunc(bucketPath, ListBucket).Queries("list","{list}").Methods("GET")
 
 	/* Object Management */
-	router.HandleFunc(fmt.Sprintf("%s%s",bucketPath,objectPath), CreateTicket).Queries("create","{create}").Methods("POST")
-	router.HandleFunc(fmt.Sprintf("%s%s",bucketPath,objectPath), UploadAll).Queries("partNumber","{partNumber}").Methods("PUT")
+	router.HandleFunc(buckObj, CreateTicket).Queries("create","{create}").Methods("POST")
+	router.HandleFunc(buckObj, UploadPart).Queries("partNumber","{partNumber}").Methods("PUT")
 
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
