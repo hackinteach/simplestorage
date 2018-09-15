@@ -40,3 +40,11 @@ type Part struct {
 	MD5 		string			`bson:"md5" json:"md5"`
 	Size		int				`bson:"size" json:"size"`
 }
+
+var ERROR = map[string]string {
+	"LengthMismatched":	"LengthMismatched",
+	"MD5Mismatched": "MD5Mismatched",
+	"InvalidPartNumber": "InvalidPartNumber",
+	"InvalidObjectName": "InvalidObjectName",
+	"InvalidBucket": "InvalidBucket",
+}
