@@ -8,6 +8,7 @@ import (
 	. "simplestorage/Misc"
 	. "simplestorage/Mongo"
 	. "simplestorage/Structure"
+	"strconv"
 )
 
 func CreateTicket(w http.ResponseWriter, r *http.Request) {
@@ -48,23 +49,22 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 	partNumber := r.URL.Query().Get("partNumber")
 	valid := ValidatePattern(partNumber, PartNumPattern)
 
-	length := r.Header.Get("Content-Length")
+	tlength := r.Header.Get("Content-Length")
+	length, lengthErr := strconv.Atoi(tlength)
 	md5 := r.Header.Get("Content-MD5")
 
-	var ret = map[string]string{
+	ret := map[string]interface{}{
 		"md5":        md5,
 		"length":     length,
 		"partNumber": partNumber,
 	}
-
-	w.Header().Set("Content-Type", "application/json")
 
 	/* VALIDATE REQUEST */
 	if !valid {
 		ret["error"] = ERROR["InvalidPartNumber"]
 	}
 
-	if length == "0" {
+	if lengthErr != nil {
 		ret["error"] = ERROR["LengthMismatched"]
 	}
 
@@ -76,11 +76,7 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 		ret["error"] = ERROR["InvalidBucket"]
 	}
 
-	if ret["error"] != "" {
-		json.NewEncoder(w).Encode(ret)
-		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
+
 	/* PERFORM REQUEST */
 	var part Part
 	part.Number = partNumber
@@ -88,14 +84,30 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 	part.Size = length
 	part.Object = objectName
 
-	b, _ := ioutil.ReadAll(r.Body)
-	WriteFile(b,partNumber,objectName,bucketName)
+	b := r.Body
+	f, _ := ioutil.ReadAll(b)
+	defer b.Close()
+	checksum, err := WriteFile(f,partNumber,objectName,bucketName)
 
-	CreatePart(part)
+	if checksum != md5 || err != nil || md5 == ""{
+		ret["error"] = ERROR["MD5Mismatched"]
+	}
+	//log.Printf("checksum %s",checksum)
+	if ret["error"] != nil {
 
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(ret)
-	w.WriteHeader(http.StatusOK)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ret)
+
+	}else{
+
+		CreatePart(part)
+		UpdateObjectLength(objectName,length)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(ret)
+
+	}
 }
 
 func CompleteUpload(w http.ResponseWriter, r *http.Request) {
