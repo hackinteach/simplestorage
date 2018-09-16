@@ -62,6 +62,10 @@ func GetObjectName(r *http.Request) (string) {
 	return strings.ToLower(mux.Vars(r)["objectName"])
 }
 
+/**
+Write file to /{bucketName}/{objectName}/{filename}
+md5 along the fly and return md5 checksum
+ */
 func WriteFile(f []byte, filename string, object string, bucket string) (MD5 string, Error error) {
 	hash := md5.New()
 
