@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"regexp"
+	"strings"
 	"time"
 )
 
@@ -49,9 +50,9 @@ func RemoveDirectory(name string)(bool){
 }
 
 func GetBucketName(r *http.Request)(string) {
-	return mux.Vars(r)["bucketName"]
+	return strings.ToLower(mux.Vars(r)["bucketName"])
 }
 
 func GetObjectName(r *http.Request)(string){
-	return mux.Vars(r)["objectName"]
+	return strings.ToLower(mux.Vars(r)["objectName"])
 }
