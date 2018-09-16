@@ -3,7 +3,6 @@ package Mongo
 import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	"log"
 	. "simplestorage/Structure"
 )
 
@@ -11,6 +10,7 @@ var (
 	session          *mgo.Session
 	BucketCollection *mgo.Collection
 	ObjectCollection *mgo.Collection
+	PartCollection 	 *mgo.Collection
 )
 
 const (
@@ -28,6 +28,7 @@ func init() {
 	db := session.DB(DB)
 	BucketCollection = db.C("Bucket")
 	ObjectCollection = db.C("Object")
+	PartCollection   = db.C("Part")
 }
 
 func CheckBucketExist(bucketName string)(bool){
@@ -36,7 +37,6 @@ func CheckBucketExist(bucketName string)(bool){
 
 	for _,b := range buckets{
 		if b.Name == bucketName {
-			log.Print("Found")
 			return true
 		}
 	}
@@ -92,4 +92,8 @@ func FindOjbect(bucketName string, objectName string)(bool){
 		return true
 	}
 	return false
+}
+
+func CreatePart(part Part)(bool){
+	return PartCollection.Insert(part) == nil
 }
