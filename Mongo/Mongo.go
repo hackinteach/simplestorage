@@ -73,7 +73,6 @@ func GetBucket(name string)(TempBucket){
 }
 
 func GetObjectList(bucketName string)([]TempObject){
-	// @TODO Get object list from DB
 	var result []TempObject
 	ObjectCollection.Find(bson.M{"bucket":bucketName}).All(&result)
 	return result
@@ -96,4 +95,11 @@ func FindOjbect(bucketName string, objectName string)(bool){
 
 func CreatePart(part Part)(bool){
 	return PartCollection.Insert(part) == nil
+}
+
+func UpdateObjectLength(object string, length int)(bool){
+	selector := bson.M{"name":object}
+	updater  := bson.M{"length":length}
+	err := ObjectCollection.Update(selector,bson.M{"$inc":updater})
+	return err != nil
 }
