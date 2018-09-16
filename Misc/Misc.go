@@ -2,6 +2,7 @@ package Misc
 
 import (
 	"github.com/gorilla/mux"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -55,4 +56,15 @@ func GetBucketName(r *http.Request)(string) {
 
 func GetObjectName(r *http.Request)(string){
 	return strings.ToLower(mux.Vars(r)["objectName"])
+}
+
+func WriteFile(f []byte, filename string, object string, bucket string)(bool){
+	permission := os.FileMode(0755).Perm()
+	path := filepath.Join(BucketPath,"/",bucket,"/",object,"/",filename)
+	err := ioutil.WriteFile(path,f,permission)
+	if err != nil {
+		log.Printf("Cannot write file %s",filename)
+		return false
+	}
+	return true
 }
