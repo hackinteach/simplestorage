@@ -36,12 +36,12 @@ func CreateBucket(w http.ResponseWriter, r *http.Request) {
 			mapstructure.Decode(tmp,&tmpBucket)
 			json.NewEncoder(w).Encode(tmpBucket)
 			w.Header().Set("Content-Type","application/json")
-			w.WriteHeader(200)
+			w.WriteHeader(http.StatusOK)
 		}else{
-			w.WriteHeader(400)
+			w.WriteHeader(http.StatusBadRequest)
 		}
 	}else{
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 	}
 }
 
@@ -53,12 +53,12 @@ func DeleteBucket(w http.ResponseWriter, r *http.Request) {
 		del := RemoveBucket(bucketName)
 
 		if ! (rm && del){
-			w.WriteHeader(400)
+			w.WriteHeader(http.StatusBadRequest)
 		}
-		w.WriteHeader(200)
+		w.WriteHeader(http.StatusOK)
 	}else{
 		log.Print("Bucket NOT Exists")
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 	}
 }
 
@@ -71,14 +71,20 @@ func ListBucket(w http.ResponseWriter, r *http.Request) {
 	var bucket = GetBucket(bucketName)
 
 	if bucket.Name == "" {
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
 	}
 
 	mapstructure.Decode(bucket,&result)
 
-	result["objects"] = GetObjectList(bucketName)
+	objects := GetObjectList(bucketName)
+
+	if objects != nil {
+		result["objects"] = objects
+	}else{
+		result["objects"] = []string{}
+	}
 
 	w.Header().Set("Content-Type","application/json")
 	json.NewEncoder(w).Encode(result)
-	w.WriteHeader(200)
+	w.WriteHeader(http.StatusOK)
 }
