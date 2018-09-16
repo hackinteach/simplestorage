@@ -34,9 +34,9 @@ func CreateBucket(w http.ResponseWriter, r *http.Request) {
 		if add && mkdir {
 			var tmpBucket TempBucket
 			mapstructure.Decode(tmp,&tmpBucket)
-			json.NewEncoder(w).Encode(tmpBucket)
 			w.Header().Set("Content-Type","application/json")
 			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(tmpBucket)
 		}else{
 			w.WriteHeader(http.StatusBadRequest)
 		}
@@ -85,6 +85,6 @@ func ListBucket(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.Header().Set("Content-Type","application/json")
-	json.NewEncoder(w).Encode(result)
 	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(result)
 }
