@@ -3,6 +3,7 @@ package ObjectManagement
 import (
 	"encoding/json"
 	"github.com/mitchellh/mapstructure"
+	"io/ioutil"
 	"net/http"
 	. "simplestorage/Misc"
 	. "simplestorage/Mongo"
@@ -17,7 +18,7 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 	objExist := CheckObjectExist(objectName)
 
 	if buckExist && !objExist {
-		MakeObjectDirectory(bucketName,objectName)
+		MakeObjectDirectory(bucketName, objectName)
 		//@TODO update DB
 		var object Object
 
@@ -26,16 +27,17 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 
 		temp["name"] = objectName
 		temp["bucket"] = bucketName
+		temp["completed"] = false
+		temp["created"] = GetTime()
+		temp["modified"] = GetTime()
 
-		mapstructure.Decode(temp,&object)
+		mapstructure.Decode(temp, &object)
 
 		CreateObject(object)
 
-		w.Header().Set("Content-Type","application/json")
-		json.NewEncoder(w).Encode(object)
-		w.WriteHeader(200)
-	}else{
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
 	}
 }
 
@@ -44,26 +46,25 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 	objectName := GetObjectName(r)
 
 	partNumber := r.URL.Query().Get("partNumber")
-	valid := ValidatePattern(partNumber,PART_NUM_PATTERN)
+	valid := ValidatePattern(partNumber, PartNumPattern)
 
 	length := r.Header.Get("Content-Length")
 	md5 := r.Header.Get("Content-MD5")
 
 	var ret = map[string]string{
-		"md5": md5,
-		"length": length,
+		"md5":        md5,
+		"length":     length,
 		"partNumber": partNumber,
 	}
 
-	w.Header().Set("Content-Type","application/json")
+	w.Header().Set("Content-Type", "application/json")
 
 	/* VALIDATE REQUEST */
-
-	if !valid{
+	if !valid {
 		ret["error"] = ERROR["InvalidPartNumber"]
 	}
 
-	if length == "" {
+	if length == "0" {
 		ret["error"] = ERROR["LengthMismatched"]
 	}
 
@@ -71,17 +72,30 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 		ret["error"] = ERROR["MD5Mismatched"]
 	}
 
-	if !FindOjbect(bucketName,objectName) {
+	if !FindOjbect(bucketName, objectName) {
 		ret["error"] = ERROR["InvalidBucket"]
 	}
 
-	if ret["error"] == "" {
+	if ret["error"] != "" {
 		json.NewEncoder(w).Encode(ret)
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
-
 	/* PERFORM REQUEST */
-	//@TODO Make Part struct and create Object, add to db
+	var part Part
+	part.Number = partNumber
+	part.MD5 = md5
+	part.Size = length
+	part.Object = objectName
+
+	b, _ := ioutil.ReadAll(r.Body)
+	WriteFile(b,partNumber,objectName,bucketName)
+
+	CreatePart(part)
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(ret)
+	w.WriteHeader(http.StatusOK)
 }
 
 func CompleteUpload(w http.ResponseWriter, r *http.Request) {
