@@ -38,7 +38,7 @@ type Part struct {
 	ID			bson.ObjectId	`bson:"_id,omitempty"`
 	Number 		string				`bson:"number" json:"number"`
 	MD5 		string			`bson:"md5" json:"md5"`
-	Size		string				`bson:"size" json:"size"`
+	Size		int				`bson:"size" json:"size"`
 	Object		string			`bson:"object" json:"object"`
 }
 
