@@ -48,9 +48,7 @@ func MakeObjectDirectory(bucket string, name string) (bool) {
 func RemoveDirectory(name string) (bool) {
 	var fullPath = filepath.Join(BucketPath, name)
 
-	err := os.Remove(fullPath)
-	log.Print("Removing")
-	log.Print(err)
+	err := os.RemoveAll(fullPath)
 	return err == nil
 }
 
