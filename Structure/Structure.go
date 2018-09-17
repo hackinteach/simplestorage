@@ -1,6 +1,13 @@
 package Structure
 
-import "gopkg.in/mgo.v2/bson"
+import (
+	"crypto/md5"
+	"encoding/hex"
+	"fmt"
+	"gopkg.in/mgo.v2/bson"
+	"simplestorage/Mongo"
+	"strings"
+)
 
 type Bucket struct {
 	ID	 		bson.ObjectId	`bson:"_id,omitempty"`
@@ -25,6 +32,7 @@ type Object struct {
 	Completed	bool			`bson:"completed" json:"completed"`
 	Created 	int64			`bson:"created" json:"created"`
 	Modified 	int64			`bson:"modified" json:"modified"`
+	Part		[]string		`bson:"part" json:"part"`
 }
 
 type TempObject struct {
@@ -53,3 +61,20 @@ var ERROR = map[string]string {
 const PartNumPattern = `^([1-9][0-9]{0,3}|10000)$`
 const ObjNamePattern = `^(?!\.).[ \. | \_ | -| a-z | 0-9]*`
 const BuckNamePattern = `(^(?!\.)([a-z|1-9|\-|\_]){2,})`
+
+func (o Object) eTag() string {
+	hasher := md5.New()
+	var parts []Part
+	var md5 []string
+
+	for _,n := range o.Part {
+		p := Mongo.FindPart(n)
+		parts = append(parts, p)
+		md5 = append(md5, p.MD5)
+	}
+
+	md5s := strings.Join(md5,"")
+	hasher.Write([]byte(md5s))
+	hashed := hex.EncodeToString(hasher.Sum(nil))
+	return fmt.Sprintf("%s-%d",hashed,len(md5))
+}
