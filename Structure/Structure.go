@@ -26,8 +26,6 @@ type TempBucket struct {
 type Object struct {
 	ID			bson.ObjectId	`bson:"_id,omitempty"`
 	Name 		string			`bson:"name" json:"name"`
-	ETag		string			`bson:"etag" json:"etag"`
-	Length		int				`bson:"length" json:"length"`
 	Bucket		string			`bson:"bucket" json:"bucket"`
 	Completed	bool			`bson:"completed" json:"completed"`
 	Created 	int64			`bson:"created" json:"created"`
@@ -62,7 +60,7 @@ const PartNumPattern = `^([1-9][0-9]{0,3}|10000)$`
 const ObjNamePattern = `^(?!\.).[ \. | \_ | -| a-z | 0-9]*`
 const BuckNamePattern = `(^(?!\.)([a-z|1-9|\-|\_]){2,})`
 
-func (o Object) eTag() string {
+func (o Object) Etag() string {
 	hasher := md5.New()
 	parts := Mongo.FindParts(o.Name)
 	var md5 []string
@@ -77,7 +75,7 @@ func (o Object) eTag() string {
 	return fmt.Sprintf("%s-%d",hashed,len(md5))
 }
 
-func (o Object) totalLength() int {
+func (o Object) Length() int {
 	length := 0
 	for _,v := range o.Part {
 		p := Mongo.FindPart(v)
