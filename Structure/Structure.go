@@ -64,12 +64,10 @@ const BuckNamePattern = `(^(?!\.)([a-z|1-9|\-|\_]){2,})`
 
 func (o Object) eTag() string {
 	hasher := md5.New()
-	var parts []Part
+	parts := Mongo.FindParts(o.Name)
 	var md5 []string
 
-	for _,n := range o.Part {
-		p := Mongo.FindPart(n)
-		parts = append(parts, p)
+	for _,p := range parts {
 		md5 = append(md5, p.MD5)
 	}
 
@@ -77,4 +75,13 @@ func (o Object) eTag() string {
 	hasher.Write([]byte(md5s))
 	hashed := hex.EncodeToString(hasher.Sum(nil))
 	return fmt.Sprintf("%s-%d",hashed,len(md5))
+}
+
+func (o Object) totalLength() int {
+	length := 0
+	for _,v := range o.Part {
+		p := Mongo.FindPart(v)
+		length += p.Size
+	}
+	return length
 }
