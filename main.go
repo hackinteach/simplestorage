@@ -30,6 +30,7 @@ func main() {
 	/* Object Management */
 	router.HandleFunc(buckObj, CreateTicket).Queries("create","{create}").Methods("POST")
 	router.HandleFunc(buckObj, UploadPart).Queries("partNumber","{partNumber}").Methods("PUT")
+	router.HandleFunc(buckObj, CompleteUpload).Queries("complete","{complete}").Methods("POST")
 
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
