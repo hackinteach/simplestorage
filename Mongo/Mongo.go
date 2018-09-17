@@ -110,3 +110,10 @@ func FindPart(part string)(Part){
 	PartCollection.Find(selector).One(&p)
 	return p
 }
+
+func GetObject(objectName string)(Object){
+	selector := bson.M{"name":objectName}
+	var o Object
+	ObjectCollection.Find(selector).One(&o)
+	return o
+}
