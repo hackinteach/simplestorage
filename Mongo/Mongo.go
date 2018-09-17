@@ -43,19 +43,6 @@ func CheckBucketExist(bucketName string)(bool){
 	return false
 }
 
-func CheckObjectExist(name string)(bool){
-	var objects []Object
-	ObjectCollection.Find(bson.M{"name":name}).All(&objects)
-
-	for _,b := range objects{
-		if b.Name == name {
-			//log.Print("Found")
-			return true
-		}
-	}
-	return false
-}
-
 func AddBucket(bucket Bucket) (bool) {
 	err := BucketCollection.Insert(bucket)
 	return err == nil
@@ -66,7 +53,7 @@ func RemoveBucket(name string)(bool){
 	return err == nil
 }
 
-func GetBucket(name string)(TempBucket){
+func GetReturnBucket(name string)(TempBucket){
 	var result TempBucket
 	BucketCollection.Find(bson.M{"name":name}).One(&result)
 	return result
@@ -82,7 +69,7 @@ func CreateObject(object Object)(bool){
 	return ObjectCollection.Insert(object) == nil
 }
 
-func FindOjbect(bucketName string, objectName string)(bool){
+func FindObject(bucketName string, objectName string)(bool){
 	var result []Object
 	ObjectCollection.Find(bson.M{"bucket":bucketName}).All(&result)
 
@@ -102,4 +89,24 @@ func UpdateObjectLength(object string, length int)(bool){
 	updater  := bson.M{"length":length}
 	err := ObjectCollection.Update(selector,bson.M{"$inc":updater})
 	return err != nil
+}
+
+func UpdateObjectPart(objectName string, partName string)(error){
+	selector := bson.M{"name":objectName}
+	updater := bson.M{"part":partName}
+	return ObjectCollection.Update(selector,bson.M{"$push": updater})
+}
+
+func FindParts(object string)([]Part){
+	selector := bson.M{"object": object}
+	var res []Part
+	PartCollection.Find(selector).All(&res)
+	return res
+}
+
+func FindPart(part string)(Part){
+	selector := bson.M{"number": part}
+	var p Part
+	PartCollection.Find(selector).One(&p)
+	return p
 }
