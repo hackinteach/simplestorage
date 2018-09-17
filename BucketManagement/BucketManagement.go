@@ -68,7 +68,7 @@ func ListBucket(w http.ResponseWriter, r *http.Request) {
 	var result map[string]interface{}
 	result = make(map[string]interface{})
 
-	var bucket = GetBucket(bucketName)
+	var bucket = GetReturnBucket(bucketName)
 
 	if bucket.Name == "" {
 		w.WriteHeader(http.StatusBadRequest)
