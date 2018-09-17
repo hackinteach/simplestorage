@@ -16,7 +16,7 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 	objectName := GetObjectName(r)
 
 	buckExist := CheckBucketExist(bucketName)
-	objExist := CheckObjectExist(objectName)
+	objExist := FindObject(bucketName,objectName)
 
 	if buckExist && !objExist {
 		MakeObjectDirectory(bucketName, objectName)
@@ -72,18 +72,18 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 		ret["error"] = ERROR["MD5Mismatched"]
 	}
 
-	if !FindOjbect(bucketName, objectName) {
+	if !FindObject(bucketName, objectName) {
 		ret["error"] = ERROR["InvalidBucket"]
 	}
 
 
 	/* PERFORM REQUEST */
+	UpdateObjectPart(objectName,partNumber)
 	var part Part
 	part.Number = partNumber
 	part.MD5 = md5
 	part.Size = length
 	part.Object = objectName
-
 	b := r.Body
 	f, _ := ioutil.ReadAll(b)
 	defer b.Close()
@@ -111,6 +111,37 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 }
 
 func CompleteUpload(w http.ResponseWriter, r *http.Request) {
+	bucketName := GetBucketName(r)
+	objectName := GetObjectName(r)
+	o := GetObject(objectName)
+
+	tl := r.Header.Get("Content-Length")
+	totalLength,_ := strconv.Atoi(tl)
+	etag := r.Header.Get("Content-MD5")
+
+	ret := map[string]interface{}{
+		"name": objectName,
+		"eTag" : etag,
+		"length": totalLength,
+	}
+
+	if !CheckBucketExist(bucketName) {
+		ret["error"] = 	ERROR["InvalidBucket"]
+
+	}else if !FindObject(bucketName,objectName) {
+		ret["error"] = ERROR["InvalidBucket"]
+	}else if o.Etag() != etag {
+		ret["error"] = ERROR["MD5Mismatched"]
+	}else if o.Length() != totalLength {
+		ret["error"] = ERROR["LengthMismatched"]
+	}
+
+	if ret["error"] != nil {
+		w.Header().Set("Content-Type","application/json")
+		w.WriteHeader(400)
+		json.NewEncoder(w).Encode(ret)
+	}
+
 
 }
 
