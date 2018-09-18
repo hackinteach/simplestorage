@@ -74,8 +74,9 @@ func FindObject(bucketName string, objectName string)(bool){
 	ObjectCollection.Find(bson.M{"bucket":bucketName}).All(&result)
 
 	for _,o := range result {
-		if o.Name == objectName {}
-		return true
+		if o.Name == objectName {
+			return true
+		}
 	}
 	return false
 }
