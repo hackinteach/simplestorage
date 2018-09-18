@@ -48,14 +48,6 @@ type Part struct {
 	Object		string			`bson:"object" json:"object"`
 }
 
-var ERROR = map[string]string {
-	"LengthMismatched":	"LengthMismatched",
-	"MD5Mismatched": "MD5Mismatched",
-	"InvalidPartNumber": "InvalidPartNumber",
-	"InvalidObjectName": "InvalidObjectName",
-	"InvalidBucket": "InvalidBucket",
-}
-
 const PartNumPattern = `^([1-9][0-9]{0,3}|10000)$`
 const ObjNamePattern = `^(?!\.).[ \. | \_ | -| a-z | 0-9]*`
 const BuckNamePattern = `(^(?!\.)([a-z|1-9|\-|\_]){2,})`
