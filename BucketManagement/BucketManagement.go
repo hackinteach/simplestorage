@@ -49,7 +49,7 @@ func DeleteBucket(w http.ResponseWriter, r *http.Request) {
 	var bucketName = GetBucketName(r)
 	if CheckBucketExist(bucketName) {
 		log.Print("Bucket Exists")
-		rm := RemoveDirectory(bucketName)
+		rm := RemoveBucketDirectory(bucketName)
 		del := RemoveBucket(bucketName)
 
 		if ! (rm && del){
