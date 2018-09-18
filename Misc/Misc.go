@@ -33,8 +33,8 @@ func GetTime() (int64) {
 func MakeBucketDirectory(name string) (bool) {
 	var fullPath = filepath.Join(BucketPath, name)
 	//log.Printf("path: %s",fullPath)
-	err := os.MkdirAll(fullPath, 511)
-	exec.Command("chmod", "777", fullPath)
+	err := os.MkdirAll(fullPath, 0777)
+	//exec.Command("chmod", "777", fullPath)
 	return err == nil
 }
 
@@ -82,4 +82,32 @@ func WriteFile(f []byte, filename string, object string, bucket string) (MD5 str
 	}
 	checksum := fmt.Sprintf("%x",hash.Sum([]byte{}))
 	return checksum, nil
+}
+
+func RemovePartFile(bucket string, object string, part string)(Error error){
+	path := fmt.Sprintf("%s/%s/%s/%s",BucketPath,bucket,object,part)
+	return os.Remove(path)
+}
+
+func SearchStringArray(arr []string, search string)(bool){
+	for _,st := range arr {
+		if st == search {
+			return true
+		}
+	}
+	return false
+}
+
+func RemoveItem(arr []string, item string)(Result []string){
+	for i, elm := range arr{
+		if elm == item {
+			return remove(arr,i)
+		}
+	}
+	return arr
+}
+
+func remove(s []string, i int) []string {
+	s[len(s)-1], s[i] = s[i], s[len(s)-1]
+	return s[:len(s)-1]
 }
