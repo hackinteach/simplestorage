@@ -99,7 +99,7 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 	checksum, err := WriteFile(f,partNumber,objectName,bucketName)
 
 	if checksum != md5 || err != nil || md5 == ""{
-		ret["error"] = ERROR["MD5Mismatched"]
+		ret["error"] = Error.ErrorMD5
 	}
 	//log.Printf("checksum %s",checksum)
 	if ret["error"] != nil {
@@ -111,7 +111,6 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 	}else{
 
 		CreatePart(part)
-		UpdateObjectLength(objectName,length)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(ret)
@@ -158,11 +157,41 @@ func CompleteUpload(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeletePart(w http.ResponseWriter, r *http.Request) {
+	bucketName := GetBucketName(r)
+	objectName := GetObjectName(r)
+	partNumber := r.URL.Query().Get("partNumber")
+	o := GetObject(objectName)
 
+	if 	o.Completed ||
+		!FindObject(bucketName,objectName) ||
+		partNumber == "" ||
+		!SearchStringArray(o.Part,partNumber) {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+	}
+
+	// Remove from dir
+	err := RemovePartFile(bucketName,objectName,partNumber)
+	if err != nil {
+		w.Write([]byte("Cannot remove part, please try again"))
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	// Remove from DB
+	o.Part = RemoveItem(o.Part,partNumber)
+	UpdateObject(o)
+	RemovePart(partNumber,objectName)
+	w.WriteHeader(http.StatusOK)
 }
 
 func DeleteObject(w http.ResponseWriter, r *http.Request) {
+	bucketName := GetBucketName(r)
+	objectName := GetObjectName(r)
 
+	if FindObject(bucketName,objectName) {
+
+	}
 }
 
 func DownloadObject(w http.ResponseWriter, r *http.Request) {
