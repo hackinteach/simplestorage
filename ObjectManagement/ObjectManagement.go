@@ -127,14 +127,13 @@ func CompleteUpload(w http.ResponseWriter, r *http.Request) {
 	objectName := GetObjectName(r)
 	o, _ := GetObject(objectName, bucketName)
 
-	tl := r.Header.Get("Content-Length")
-	totalLength,_ := strconv.Atoi(tl)
+	//tl := r.Header.Get("Content-Length")
+	//totalLength,_ := strconv.Atoi(tl)
 	etag := r.Header.Get("Content-MD5")
 
 	ret := map[string]interface{}{
 		"name": objectName,
 		"eTag" : etag,
-		"length": totalLength,
 	}
 
 	if !CheckBucketExist(bucketName) {
@@ -143,8 +142,6 @@ func CompleteUpload(w http.ResponseWriter, r *http.Request) {
 		ret["error"] = Error.ErrorObjectName
 	}else if o.Etag() != etag {
 		ret["error"] = Error.ErrorMD5
-	}else if o.Length() != totalLength {
-		ret["error"] = Error.ErrorLength
 	}
 
 	if ret["error"] != nil {
@@ -261,16 +258,45 @@ func UpdateMeta(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
 		return
 	}else{
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
 	}
 }
 
 func DeleteMeta(w http.ResponseWriter, r *http.Request) {
-
+	bucketName := GetBucketName(r)
+	objectName := GetObjectName(r)
+	key := r.URL.Query().Get("key")
+	o, found := GetObject(objectName, bucketName)
+	if found {
+		_, ok := o.Meta[key]
+		if ok {
+			delete(o.Meta,key)
+			UpdateObject(o)
+		}
+		w.WriteHeader(http.StatusOK)
+		return
+	}else{
+		w.WriteHeader(http.StatusNotFound)
+	}
 }
 
 func GetMetaByKey(w http.ResponseWriter, r *http.Request) {
+	bucketName := GetBucketName(r)
+	objectName := GetObjectName(r)
+	key := r.URL.Query().Get("key")
 
+	o, found := GetObject(objectName, bucketName)
+	if found {
+		_,ok := o.Meta[key]
+		w.Header().Set("Content-Type","application/json")
+		w.WriteHeader(http.StatusOK)
+		if ok {
+			json.NewEncoder(w).Encode(o.Meta)
+		}
+		return
+	}else{
+		w.WriteHeader(http.StatusBadRequest)
+	}
 }
 
 func GetMeta(w http.ResponseWriter, r *http.Request) {
