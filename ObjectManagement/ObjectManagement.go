@@ -5,6 +5,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"io/ioutil"
 	"net/http"
+	"regexp"
 	"simplestorage/Error"
 	. "simplestorage/Misc"
 	. "simplestorage/Mongo"
@@ -88,6 +89,9 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 
 	/* PERFORM REQUEST */
 	UpdateObjectPart(objectName,partNumber)
+	o := GetObject(objectName)
+	o = o.UpdatePart(partNumber)
+	UpdateObject(o)
 	var part Part
 	part.Number = partNumber
 	part.MD5 = md5
@@ -200,11 +204,42 @@ func DeleteObject(w http.ResponseWriter, r *http.Request) {
 }
 
 func DownloadObject(w http.ResponseWriter, r *http.Request) {
+	bucketName := GetBucketName(r)
+	objectName := GetObjectName(r)
 
+	if !FindObject(bucketName,objectName){
+		w.WriteHeader(http.StatusBadRequest)
+	}
+
+	hRange := r.Header.Get("Range")
+	//eTag := r.Header.Get("ETag")
+
+	o :=GetObject(objectName)
+
+	if hRange != "" {
+		f := o.File()
+		w.Write(f)
+		w.WriteHeader(http.StatusOK)
+	}else{
+		r,_ := regexp.Compile("([0-9]+)")
+		scope := r.FindAllString(hRange,-1)
+		from,_ := strconv.Atoi(scope[0])
+		var to int
+		if len(scope) == 2 {
+			to,_ = strconv.Atoi(scope[1])
+		}else{
+			to = o.Length()
+		}
+		f := o.FileRange(int64(from),int64(to))
+		w.Write(f)
+		w.WriteHeader(http.StatusOK)
+	}
 }
 
 func UpdateMeta(w http.ResponseWriter, r *http.Request) {
-
+	bucketName := GetBucketName(r)
+	objectName := GetObjectName(r)
+	partNumber := r.URL.Query().Get("partNumber")
 }
 
 func DeleteMeta(w http.ResponseWriter, r *http.Request) {
