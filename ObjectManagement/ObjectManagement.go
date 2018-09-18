@@ -37,6 +37,7 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 		temp["completed"] = false
 		temp["created"] = GetTime()
 		temp["modified"] = GetTime()
+		temp["meta"] = make(map[string]interface{})
 
 		mapstructure.Decode(temp, &object)
 
@@ -88,10 +89,6 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 
 
 	/* PERFORM REQUEST */
-	UpdateObjectPart(objectName,partNumber)
-	o := GetObject(objectName)
-	o = o.UpdatePart(partNumber)
-	UpdateObject(o)
 	var part Part
 	part.Number = partNumber
 	part.MD5 = md5
@@ -113,7 +110,10 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(ret)
 
 	}else{
-
+		UpdateObjectPart(objectName,partNumber)
+		o,_ := GetObject(objectName,bucketName)
+		o = o.UpdatePart(partNumber)
+		UpdateObject(o)
 		CreatePart(part)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -125,7 +125,7 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 func CompleteUpload(w http.ResponseWriter, r *http.Request) {
 	bucketName := GetBucketName(r)
 	objectName := GetObjectName(r)
-	o := GetObject(objectName)
+	o, _ := GetObject(objectName, bucketName)
 
 	tl := r.Header.Get("Content-Length")
 	totalLength,_ := strconv.Atoi(tl)
@@ -164,7 +164,12 @@ func DeletePart(w http.ResponseWriter, r *http.Request) {
 	bucketName := GetBucketName(r)
 	objectName := GetObjectName(r)
 	partNumber := r.URL.Query().Get("partNumber")
-	o := GetObject(objectName)
+	o, found := GetObject(objectName,bucketName)
+
+	if !found {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	if 	o.Completed ||
 		!FindObject(bucketName,objectName) ||
@@ -214,7 +219,12 @@ func DownloadObject(w http.ResponseWriter, r *http.Request) {
 	hRange := r.Header.Get("Range")
 	//eTag := r.Header.Get("ETag")
 
-	o :=GetObject(objectName)
+	o, found := GetObject(objectName,bucketName)
+
+	if !found {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	if hRange != "" {
 		f := o.File()
@@ -239,7 +249,20 @@ func DownloadObject(w http.ResponseWriter, r *http.Request) {
 func UpdateMeta(w http.ResponseWriter, r *http.Request) {
 	bucketName := GetBucketName(r)
 	objectName := GetObjectName(r)
-	partNumber := r.URL.Query().Get("partNumber")
+	key := r.URL.Query().Get("key")
+	b := r.Body
+	f, _ := ioutil.ReadAll(b)
+	defer b.Close()
+	value := string(f)
+	o, found := GetObject(objectName, bucketName)
+	if found {
+		o.Meta[key] = value
+		UpdateObject(o)
+		w.WriteHeader(http.StatusOK)
+		return
+	}else{
+		w.WriteHeader(http.StatusBadRequest)
+	}
 }
 
 func DeleteMeta(w http.ResponseWriter, r *http.Request) {
