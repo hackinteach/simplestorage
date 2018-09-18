@@ -31,8 +31,13 @@ func main() {
 	router.HandleFunc(buckObj, CreateTicket).Queries("create","{create}").Methods("POST")
 	router.HandleFunc(buckObj, UploadPart).Queries("partNumber","{partNumber}").Methods("PUT")
 	router.HandleFunc(buckObj, CompleteUpload).Queries("complete","{complete}").Methods("POST")
-	router.HandleFunc(buckObj, DeletePart).Queries("delete","{delete}").Methods("DELETE")
-	router.HandleFunc(buckObj, DeletePart).Queries("delete","{delete").Methods("DELETE")
+	router.HandleFunc(buckObj, DeletePart).Queries("delete","{delete}","partNumber","{partNumber}").Methods("DELETE")
+	router.HandleFunc(buckObj, DeleteObject).Queries("delete","{delete").Methods("DELETE")
+	router.HandleFunc(buckObj, DownloadObject).Methods("GET")
+	router.HandleFunc(buckObj, UpdateMeta).Queries("metadata","{metadata}","key","{key}").Methods("PUT")
+	router.HandleFunc(buckObj, DeleteMeta).Queries("metadata","{metadata}","key","{key}").Methods("DELETE")
+	router.HandleFunc(buckObj, GetMetaByKey).Queries("metadata","{metadata}","key","{key}").Methods("GET")
+	router.HandleFunc(buckObj, GetMeta).Queries("metadata","{metadata}").Methods("GET")
 
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
