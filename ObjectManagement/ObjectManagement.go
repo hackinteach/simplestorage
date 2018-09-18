@@ -291,14 +291,25 @@ func GetMetaByKey(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type","application/json")
 		w.WriteHeader(http.StatusOK)
 		if ok {
-			json.NewEncoder(w).Encode(o.Meta)
+			json.NewEncoder(w).Encode(o.Meta[key])
 		}
 		return
 	}else{
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusNotFound)
 	}
 }
 
 func GetMeta(w http.ResponseWriter, r *http.Request) {
+	bucketName := GetBucketName(r)
+	objectName := GetObjectName(r)
 
+	o, found := GetObject(objectName, bucketName)
+	if found {
+		w.Header().Set("Content-Type","application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(o.Meta)
+		return
+	}else{
+		w.WriteHeader(http.StatusNotFound)
+	}
 }
