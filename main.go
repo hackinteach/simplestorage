@@ -3,11 +3,14 @@ package main
 import (
 	_ "encoding/json"
 	"fmt"
+	"github.com/gorilla/handlers"
 	"github.com/gorilla/mux"
 	"log"
 	"net/http"
+	"os"
 	. "simplestorage/BucketManagement"
 	. "simplestorage/ObjectManagement"
+	"time"
 )
 
 const (
@@ -39,5 +42,12 @@ func main() {
 	router.HandleFunc(buckObj, GetMetaByKey).Queries("metadata","{metadata}","key","{key}").Methods("GET")
 	router.HandleFunc(buckObj, GetMeta).Queries("metadata","{metadata}").Methods("GET")
 
-	log.Fatal(http.ListenAndServe(":8000", router))
+	srv := &http.Server{
+		Handler:      handlers.LoggingHandler(os.Stdout, router),
+		Addr:         "localhost:8000",
+		WriteTimeout: 15 * time.Second,
+		ReadTimeout:  15 * time.Second,
+	}
+
+	log.Fatal(srv.ListenAndServe())
 }
