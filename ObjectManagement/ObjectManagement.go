@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/mitchellh/mapstructure"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"regexp"
 	"simplestorage/Error"
@@ -17,10 +18,10 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 	bucketName := GetBucketName(r)
 	objectName := GetObjectName(r)
 
-	if !ValidatePattern(objectName,ObjNamePattern) {
-		w.WriteHeader(200)
-		return
-	}
+	//if !ValidatePattern(objectName,ObjNamePattern) {
+	//	w.WriteHeader(http.StatusBadRequest)
+	//	return
+	//}
 
 	buckExist := CheckBucketExist(bucketName)
 	objExist := FindObject(bucketName,objectName)
@@ -40,7 +41,7 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 		temp["meta"] = make(map[string]interface{})
 
 		mapstructure.Decode(temp, &object)
-
+		log.Print(object)
 		CreateObject(object)
 
 		w.WriteHeader(http.StatusOK)
@@ -199,10 +200,11 @@ func DeleteObject(w http.ResponseWriter, r *http.Request) {
 
 	if FindObject(bucketName,objectName) {
 		RemoveObjectDirectory(bucketName,objectName)
+		RemoveObject(objectName, bucketName)
 		w.WriteHeader(http.StatusOK)
+	}else{
+		w.WriteHeader(http.StatusBadRequest)
 	}
-
-	w.WriteHeader(http.StatusBadRequest)
 }
 
 func DownloadObject(w http.ResponseWriter, r *http.Request) {
