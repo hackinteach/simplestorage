@@ -42,7 +42,7 @@ type TempObject struct {
 
 type Part struct {
 	ID			bson.ObjectId	`bson:"_id,omitempty"`
-	Number 		string				`bson:"number" json:"number"`
+	Number 		string			`bson:"number" json:"number"`
 	MD5 		string			`bson:"md5" json:"md5"`
 	Size		int				`bson:"size" json:"size"`
 	Object		string			`bson:"object" json:"object"`
