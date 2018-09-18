@@ -31,6 +31,8 @@ func main() {
 	router.HandleFunc(buckObj, CreateTicket).Queries("create","{create}").Methods("POST")
 	router.HandleFunc(buckObj, UploadPart).Queries("partNumber","{partNumber}").Methods("PUT")
 	router.HandleFunc(buckObj, CompleteUpload).Queries("complete","{complete}").Methods("POST")
+	router.HandleFunc(buckObj, DeletePart).Queries("delete","{delete}").Methods("DELETE")
+	router.HandleFunc(buckObj, DeletePart).Queries("delete","{delete").Methods("DELETE")
 
 	log.Fatal(http.ListenAndServe(":8000", router))
 }
