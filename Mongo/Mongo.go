@@ -129,3 +129,8 @@ func RemovePart(partNumber string, objcetName string)(error){
 	selector := bson.M{"number":partNumber, "object": objcetName}
 	return PartCollection.Remove(selector)
 }
+
+func RemoveObject(o, b string) error{
+	selector := bson.M{"name":o, "bucket": b}
+	return ObjectCollection.Remove(selector)
+}
