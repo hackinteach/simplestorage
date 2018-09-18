@@ -117,3 +117,8 @@ func GetObject(objectName string)(Object){
 	ObjectCollection.Find(selector).One(&o)
 	return o
 }
+
+func SetObjectComplete(objectName string)(error){
+	selector := bson.M{"name":objectName}
+	return ObjectCollection.Update(selector,bson.M{"completed":true})
+}
