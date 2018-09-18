@@ -80,17 +80,17 @@ func WriteFile(f []byte, filename string, object string, bucket string) (MD5 str
 	if _, err := io.Copy(hash, reader); err != nil {
 		return "", err
 	}
-	checksum := fmt.Sprintf("%x",hash.Sum([]byte{}))
+	checksum := fmt.Sprintf("%x", hash.Sum([]byte{}))
 	return checksum, nil
 }
 
-func RemovePartFile(bucket string, object string, part string)(Error error){
-	path := fmt.Sprintf("%s/%s/%s/%s",BucketPath,bucket,object,part)
+func RemovePartFile(bucket string, object string, part string) (Error error) {
+	path := fmt.Sprintf("%s/%s/%s/%s", BucketPath, bucket, object, part)
 	return os.Remove(path)
 }
 
-func SearchStringArray(arr []string, search string)(bool){
-	for _,st := range arr {
+func SearchStringArray(arr []string, search string) (bool) {
+	for _, st := range arr {
 		if st == search {
 			return true
 		}
@@ -98,10 +98,10 @@ func SearchStringArray(arr []string, search string)(bool){
 	return false
 }
 
-func RemoveItem(arr []string, item string)(Result []string){
-	for i, elm := range arr{
+func RemoveItem(arr []string, item string) (Result []string) {
+	for i, elm := range arr {
 		if elm == item {
-			return remove(arr,i)
+			return remove(arr, i)
 		}
 	}
 	return arr
@@ -112,7 +112,14 @@ func remove(s []string, i int) []string {
 	return s[:len(s)-1]
 }
 
-func RemoveObjectDirectory(bucket string, object string){
-	path := filepath.Join(BucketPath,"/",bucket,"/",object)
+func RemoveObjectDirectory(bucket string, object string) {
+	path := filepath.Join(BucketPath, "/", bucket, "/", object)
 	os.RemoveAll(path)
+}
+
+func GetFile(path string)[]byte{
+	f,_ := os.Open(path)
+	var ret []byte
+	f.Read(ret)
+	return ret
 }
