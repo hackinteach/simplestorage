@@ -35,7 +35,7 @@ func main() {
 	router.HandleFunc(buckObj, UploadPart).Queries("partNumber","{partNumber}").Methods("PUT")
 	router.HandleFunc(buckObj, CompleteUpload).Queries("complete","{complete}").Methods("POST")
 	router.HandleFunc(buckObj, DeletePart).Queries("delete","{delete}","partNumber","{partNumber}").Methods("DELETE")
-	router.HandleFunc(buckObj, DeleteObject).Queries("delete","{delete").Methods("DELETE")
+	router.HandleFunc(buckObj, DeleteObject).Queries("delete","{delete}").Methods("DELETE")
 	router.HandleFunc(buckObj, DownloadObject).Methods("GET")
 	router.HandleFunc(buckObj, UpdateMeta).Queries("metadata","{metadata}","key","{key}").Methods("PUT")
 	router.HandleFunc(buckObj, DeleteMeta).Queries("metadata","{metadata}","key","{key}").Methods("DELETE")
