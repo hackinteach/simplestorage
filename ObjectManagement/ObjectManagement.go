@@ -50,6 +50,7 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 }
 
 func UploadPart(w http.ResponseWriter, r *http.Request) {
+
 	bucketName := GetBucketName(r)
 	objectName := GetObjectName(r)
 
@@ -112,7 +113,7 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 	}else{
 		UpdateObjectPart(objectName,partNumber)
 		o,_ := GetObject(objectName,bucketName)
-		o = o.UpdatePart(partNumber)
+		o = UpdatePart(o,partNumber)
 		UpdateObject(o)
 		CreatePart(part)
 		w.Header().Set("Content-Type", "application/json")
@@ -140,7 +141,7 @@ func CompleteUpload(w http.ResponseWriter, r *http.Request) {
 		ret["error"] = 	Error.ErrorBucket
 	}else if !FindObject(bucketName,objectName) {
 		ret["error"] = Error.ErrorObjectName
-	}else if o.Etag() != etag {
+	}else if Etag(o) != etag {
 		ret["error"] = Error.ErrorMD5
 	}
 
@@ -224,7 +225,7 @@ func DownloadObject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if hRange != "" {
-		f := o.File()
+		f := File(o)
 		w.Write(f)
 		w.WriteHeader(http.StatusOK)
 	}else{
@@ -235,9 +236,9 @@ func DownloadObject(w http.ResponseWriter, r *http.Request) {
 		if len(scope) == 2 {
 			to,_ = strconv.Atoi(scope[1])
 		}else{
-			to = o.Length()
+			to = Length(o)
 		}
-		f := o.FileRange(int64(from),int64(to))
+		f := FileRange(o,int64(from),int64(to))
 		w.Write(f)
 		w.WriteHeader(http.StatusOK)
 	}
