@@ -22,6 +22,7 @@ SimpleStorage
 
 # User-specific stuff
 .idea/**/workspace.xml
+.pytest_cache/
 .idea/**/tasks.xml
 .idea/**/usage.statistics.xml
 .idea/**/dictionaries
