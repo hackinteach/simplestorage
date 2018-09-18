@@ -109,11 +109,14 @@ func FindPart(part string)(Part){
 	return p
 }
 
-func GetObject(objectName string)(Object){
+func GetObject(objectName, bucket string)(Object, bool){
 	selector := bson.M{"name":objectName}
 	var o Object
 	ObjectCollection.Find(selector).One(&o)
-	return o
+	if o.Bucket == bucket{
+		return o, true
+	}
+	return o, false
 }
 
 func SetObjectComplete(objectName string)(error){
