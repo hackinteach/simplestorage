@@ -35,7 +35,7 @@ type Object struct {
 	Created 	int64			`bson:"created" json:"created"`
 	Modified 	int64			`bson:"modified" json:"modified"`
 	Part		[]string		`bson:"part" json:"part"`
-	MetaData	map[string]string `bson:"meta" json:"meta"`
+	Meta		map[string]interface{} `bson:"meta" json:"meta"`
 }
 
 type TempObject struct {
