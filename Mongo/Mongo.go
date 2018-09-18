@@ -84,11 +84,9 @@ func CreatePart(part Part)(bool){
 	return PartCollection.Insert(part) == nil
 }
 
-func UpdateObjectLength(object string, length int)(bool){
-	selector := bson.M{"name":object}
-	updater  := bson.M{"length":length}
-	err := ObjectCollection.Update(selector,bson.M{"$inc":updater})
-	return err != nil
+func UpdateObject(o Object)(error){
+	selector := bson.M{"object":o.Name}
+	return ObjectCollection.Update(selector,o)
 }
 
 func UpdateObjectPart(objectName string, partName string)(error){
@@ -121,4 +119,9 @@ func GetObject(objectName string)(Object){
 func SetObjectComplete(objectName string)(error){
 	selector := bson.M{"name":objectName}
 	return ObjectCollection.Update(selector,bson.M{"completed":true})
+}
+
+func RemovePart(partNumber string, objcetName string)(error){
+	selector := bson.M{"number":partNumber, "object": objcetName}
+	return PartCollection.Remove(selector)
 }
