@@ -5,7 +5,11 @@ import (
 	"encoding/hex"
 	"fmt"
 	"gopkg.in/mgo.v2/bson"
+	"os"
+	"path/filepath"
+	"simplestorage/Misc"
 	"simplestorage/Mongo"
+	"sort"
 	"strings"
 )
 
@@ -31,6 +35,7 @@ type Object struct {
 	Created 	int64			`bson:"created" json:"created"`
 	Modified 	int64			`bson:"modified" json:"modified"`
 	Part		[]string		`bson:"part" json:"part"`
+	MetaData	map[string]string `bson:"meta" json:"meta"`
 }
 
 type TempObject struct {
@@ -74,4 +79,53 @@ func (o Object) Length() int {
 		length += p.Size
 	}
 	return length
+}
+
+func (o Object) UpdatePart(part string) Object {
+	o.Part = append(o.Part,part)
+	sort.Strings(o.Part)
+	return o
+}
+
+func (o Object) File() []byte {
+	var ret []byte
+	bucket := o.Bucket
+	parts := o.Part
+	name := o.Name
+	for _,p := range parts {
+		path := filepath.Join(Misc.BucketPath,"/",bucket,"/",name,"/",p)
+		f := Misc.GetFile(path)
+		for _,v := range f {
+			ret = append(ret,v)
+		}
+	}
+	return ret
+}
+
+func (o Object) FileRange(from, to int64) []byte{
+	var res []byte
+	bucket := o.Bucket
+	parts := o.Part
+	name := o.Name
+	count := int64(0)
+	for _,p := range parts {
+		path := filepath.Join(Misc.BucketPath, "/", bucket, "/", name, "/", p)
+		f,_ := os.Open(path)
+		info,_ := f.Stat()
+		size := info.Size()
+		count += size
+		if count >= from {
+			if count <= to{
+				f.ReadAt(res,from-count)
+			}else{
+				var tmp []byte
+				f.Read(tmp)
+				tmp = tmp[:to-count]
+				for _,v := range tmp{
+					res = append(res,v)
+				}
+			}
+		}
+	}
+	return res
 }
