@@ -20,13 +20,13 @@ type TempBucket struct {
 
 type Object struct {
 	ID			bson.ObjectId	`bson:"_id,omitempty"`
-	Name 		string			`bson:"name" json:"name"`
-	Bucket		string			`bson:"bucket" json:"bucket"`
-	Completed	bool			`bson:"completed" json:"completed"`
-	Created 	int64			`bson:"created" json:"created"`
-	Modified 	int64			`bson:"modified" json:"modified"`
-	Part		[]string		`bson:"part" json:"part"`
-	Meta		map[string]interface{} `bson:"meta" json:"meta"`
+	Name 		string			`bson:"name" json:"name" mapstructure:"name"`
+	Bucket		string			`bson:"bucket" json:"bucket" mapstructure:"bucket"`
+	Completed	bool			`bson:"completed" json:"completed" mapstructure:"completed"`
+	Created 	int64			`bson:"created" json:"created mapstructure:"created"`
+	Modified 	int64			`bson:"modified" json:"modified" mapstructure:"modified"`
+	Part		[]string		`bson:"part" json:"part" mapstructure:"part"`
+	Meta		map[string]interface{} `bson:"meta" json:"meta" mapstructure:"meta"`
 }
 
 type TempObject struct {
