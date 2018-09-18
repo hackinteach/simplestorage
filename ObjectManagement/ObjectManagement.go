@@ -180,7 +180,9 @@ func DeletePart(w http.ResponseWriter, r *http.Request) {
 
 	// Remove from DB
 	o.Part = RemoveItem(o.Part,partNumber)
+	// Update object in Object Collection
 	UpdateObject(o)
+	// Remove part from Part Collection
 	RemovePart(partNumber,objectName)
 	w.WriteHeader(http.StatusOK)
 }
@@ -190,8 +192,11 @@ func DeleteObject(w http.ResponseWriter, r *http.Request) {
 	objectName := GetObjectName(r)
 
 	if FindObject(bucketName,objectName) {
-
+		RemoveObjectDirectory(bucketName,objectName)
+		w.WriteHeader(http.StatusOK)
 	}
+
+	w.WriteHeader(http.StatusBadRequest)
 }
 
 func DownloadObject(w http.ResponseWriter, r *http.Request) {
