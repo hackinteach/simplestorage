@@ -5,6 +5,7 @@ import (
 	"github.com/mitchellh/mapstructure"
 	"io/ioutil"
 	"net/http"
+	"simplestorage/Error"
 	. "simplestorage/Misc"
 	. "simplestorage/Mongo"
 	. "simplestorage/Structure"
@@ -15,12 +16,16 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 	bucketName := GetBucketName(r)
 	objectName := GetObjectName(r)
 
+	if !ValidatePattern(objectName,ObjNamePattern) {
+		w.WriteHeader(200)
+		return
+	}
+
 	buckExist := CheckBucketExist(bucketName)
 	objExist := FindObject(bucketName,objectName)
 
 	if buckExist && !objExist {
 		MakeObjectDirectory(bucketName, objectName)
-		//@TODO update DB
 		var object Object
 
 		var temp map[string]interface{}
@@ -61,19 +66,23 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 
 	/* VALIDATE REQUEST */
 	if !valid {
-		ret["error"] = ERROR["InvalidPartNumber"]
+		ret["error"] = Error.ErrorPartNumber
 	}
 
 	if lengthErr != nil {
-		ret["error"] = ERROR["LengthMismatched"]
+		ret["error"] = Error.ErrorLength
 	}
 
 	if md5 == "" {
-		ret["error"] = ERROR["MD5Mismatched"]
+		ret["error"] = Error.ErrorMD5
 	}
 
 	if !FindObject(bucketName, objectName) {
-		ret["error"] = ERROR["InvalidBucket"]
+		ret["error"] = Error.ErrorObjectName
+	}
+
+	if !CheckBucketExist(bucketName) {
+		ret["error"] = Error.ErrorBucket
 	}
 
 
@@ -126,23 +135,26 @@ func CompleteUpload(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if !CheckBucketExist(bucketName) {
-		ret["error"] = 	ERROR["InvalidBucket"]
-
+		ret["error"] = 	Error.ErrorBucket
 	}else if !FindObject(bucketName,objectName) {
-		ret["error"] = ERROR["InvalidBucket"]
+		ret["error"] = Error.ErrorObjectName
 	}else if o.Etag() != etag {
-		ret["error"] = ERROR["MD5Mismatched"]
+		ret["error"] = Error.ErrorMD5
 	}else if o.Length() != totalLength {
-		ret["error"] = ERROR["LengthMismatched"]
+		ret["error"] = Error.ErrorLength
 	}
 
 	if ret["error"] != nil {
 		w.Header().Set("Content-Type","application/json")
-		w.WriteHeader(400)
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(ret)
+	}else{
+		o.Completed = true
+		SetObjectComplete(o.Name)
+		w.Header().Set("Content-Type","application/json")
+		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(ret)
 	}
-
-
 }
 
 func DeletePart(w http.ResponseWriter, r *http.Request) {
