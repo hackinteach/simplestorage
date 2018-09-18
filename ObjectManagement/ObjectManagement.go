@@ -130,19 +130,18 @@ func CompleteUpload(w http.ResponseWriter, r *http.Request) {
 
 	//tl := r.Header.Get("Content-Length")
 	//totalLength,_ := strconv.Atoi(tl)
-	etag := r.Header.Get("Content-MD5")
+	//etag := r.Header.Get("Content-MD5")
 
 	ret := map[string]interface{}{
 		"name": objectName,
-		"eTag" : etag,
+		"eTag" : Etag(o),
+		"length": Length(o),
 	}
 
 	if !CheckBucketExist(bucketName) {
 		ret["error"] = 	Error.ErrorBucket
 	}else if !FindObject(bucketName,objectName) {
 		ret["error"] = Error.ErrorObjectName
-	}else if Etag(o) != etag {
-		ret["error"] = Error.ErrorMD5
 	}
 
 	if ret["error"] != nil {
