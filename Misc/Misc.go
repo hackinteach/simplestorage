@@ -201,3 +201,16 @@ func FileRange(o Structure.Object, from, to int64) []byte{
 	}
 	return res
 }
+
+func Hash(path string)string {
+	hasher := md5.New()
+	f,err := os.Open(path)
+
+	defer f.Close()
+	if err != nil {
+		io.Copy(hasher, f)
+	}
+
+	sum := hasher.Sum([]byte{})
+	return fmt.Sprintf("%x",sum)
+}
