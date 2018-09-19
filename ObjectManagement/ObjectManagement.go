@@ -2,10 +2,14 @@ package ObjectManagement
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/mitchellh/mapstructure"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"regexp"
 	"simplestorage/Error"
 	. "simplestorage/Misc"
@@ -96,12 +100,23 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 	part.MD5 = md5
 	part.Size = length
 	part.Object = objectName
-	b := r.Body
-	f, _ := ioutil.ReadAll(b)
-	defer b.Close()
-	checksum, err := WriteFile(f,partNumber,objectName,bucketName)
 
-	if checksum != md5 || err != nil || md5 == ""{
+	//b := r.Body
+	//f, _ := ioutil.ReadAll(b)
+	//defer b.Close()
+	//checksum, err := WriteFile(f,partNumber,objectName,bucketName)
+
+	path := filepath.Join(fmt.Sprintf("%s/%s/%s/%s",BucketPath,bucketName,objectName,partNumber))
+	f, _ := os.OpenFile(path,os.O_RDWR,0644)
+
+	defer f.Close()
+
+	io.Copy(f,r.Body)
+	defer r.Body.Close()
+
+	checksum := Hash(path)
+
+	if checksum != md5 || md5 == ""{
 		ret["error"] = Error.ErrorMD5
 	}
 	//log.Printf("checksum %s",checksum)
