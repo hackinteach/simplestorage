@@ -11,7 +11,6 @@ import (
 	"log"
 	"net/http"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"simplestorage/Mongo"
@@ -37,16 +36,21 @@ func GetTime() (int64) {
 func MakeBucketDirectory(name string) (bool) {
 	var fullPath = filepath.Join(BucketPath, name)
 	//log.Printf("path: %s",fullPath)
-	err := os.MkdirAll(fullPath, 0777)
-	//exec.Command("chmod", "777", fullPath)
+	err := os.MkdirAll(fullPath, 0755)
+	//exec.Command("chmod", "777", fullPath).Run()
+	log.Print("MKDIR")
 	return err == nil
 }
 
 func MakeObjectDirectory(bucket string, name string) (bool) {
 	var fullPath = filepath.Join(BucketPath, bucket, "/", name)
-	err := os.Mkdir(fullPath, 511)
-	exec.Command("chmod", "777", fullPath)
+	err := os.MkdirAll(fullPath, 0755)
+	log.Print("Created object dir")
+	if err != nil {
+		log.Print(err.Error())
+	}
 	return err == nil
+
 }
 
 func RemoveBucketDirectory(name string) (bool) {
@@ -93,7 +97,7 @@ func RemovePartFile(bucket string, object string, part string) (Error error) {
 	return os.Remove(path)
 }
 
-func SearchStringArray(arr []string, search string) (bool) {
+func SearchStringArray(arr []int, search int) (bool) {
 	for _, st := range arr {
 		if st == search {
 			return true
@@ -102,7 +106,7 @@ func SearchStringArray(arr []string, search string) (bool) {
 	return false
 }
 
-func RemoveItem(arr []string, item string) (Result []string) {
+func RemoveItem(arr []int, item int) (Result []int) {
 	for i, elm := range arr {
 		if elm == item {
 			return remove(arr, i)
@@ -111,7 +115,7 @@ func RemoveItem(arr []string, item string) (Result []string) {
 	return arr
 }
 
-func remove(s []string, i int) []string {
+func remove(s []int, i int) []int {
 	s[len(s)-1], s[i] = s[i], s[len(s)-1]
 	return s[:len(s)-1]
 }
@@ -134,13 +138,18 @@ func Etag(o Structure.Object) string {
 	parts := Mongo.FindParts(o.Name)
 	var md5 []string
 
+	sort.SliceStable(parts, func (i,j int) bool {
+		return parts[i].Number < parts[i].Number
+	})
+
 	for _,p := range parts {
+		log.Printf("Part Number: %d %s",p.Number, p.MD5)
 		md5 = append(md5, p.MD5)
 	}
-
-	md5s := strings.Join(md5,"")
-	hasher.Write([]byte(md5s))
-	hashed := hex.EncodeToString(hasher.Sum(nil))
+	j := strings.Join(md5,"")
+	md5s,_ := hex.DecodeString(j)
+	hasher.Write(md5s)
+	hashed := hex.EncodeToString(hasher.Sum(nil)[:16])
 	return fmt.Sprintf("%s-%d",hashed,len(md5))
 }
 
@@ -153,9 +162,9 @@ func Length(o Structure.Object) int {
 	return length
 }
 
-func UpdatePart(o Structure.Object, part string) Structure.Object {
+func UpdatePart(o Structure.Object, part int) Structure.Object {
 	o.Part = append(o.Part,part)
-	sort.Strings(o.Part)
+	sort.Ints(o.Part)
 	return o
 }
 
@@ -165,7 +174,7 @@ func File(o Structure.Object) []byte {
 	parts := o.Part
 	name := o.Name
 	for _,p := range parts {
-		path := filepath.Join(BucketPath,"/",bucket,"/",name,"/",p)
+		path := filepath.Join(BucketPath,"/",bucket,"/",name,"/",fmt.Sprintf("%d",p))
 		f := GetFile(path)
 		for _,v := range f {
 			ret = append(ret,v)
@@ -181,7 +190,7 @@ func FileRange(o Structure.Object, from, to int64) []byte{
 	name := o.Name
 	count := int64(0)
 	for _,p := range parts {
-		path := filepath.Join(BucketPath, "/", bucket, "/", name, "/", p)
+		path := filepath.Join(BucketPath, "/", bucket, "/", name, "/", fmt.Sprintf("%d",p))
 		f,_ := os.Open(path)
 		info,_ := f.Stat()
 		size := info.Size()
@@ -203,14 +212,20 @@ func FileRange(o Structure.Object, from, to int64) []byte{
 }
 
 func Hash(path string)string {
-	hasher := md5.New()
 	f,err := os.Open(path)
 
-	defer f.Close()
 	if err != nil {
-		io.Copy(hasher, f)
+		return ""
 	}
 
-	sum := hasher.Sum([]byte{})
+	defer f.Close()
+	hasher := md5.New()
+
+	if _,err := io.Copy(hasher, f); err != nil {
+		return ""
+	}
+
+	sum := hasher.Sum(nil)
+	log.Printf("%x",sum)
 	return fmt.Sprintf("%x",sum)
 }
