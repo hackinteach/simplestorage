@@ -25,7 +25,7 @@ type Object struct {
 	Completed	bool			`bson:"completed" json:"completed" mapstructure:"completed"`
 	Created 	int64			`bson:"created" json:"created mapstructure:"created"`
 	Modified 	int64			`bson:"modified" json:"modified" mapstructure:"modified"`
-	Part		[]string		`bson:"part" json:"part" mapstructure:"part"`
+	Part		[]int		`bson:"part" json:"part" mapstructure:"part"`
 	Meta		map[string]interface{} `bson:"meta" json:"meta" mapstructure:"meta"`
 }
 
@@ -38,7 +38,7 @@ type TempObject struct {
 
 type Part struct {
 	ID			bson.ObjectId	`bson:"_id,omitempty"`
-	Number 		string			`bson:"number" json:"number"`
+	Number 		int			`bson:"number" json:"number"`
 	MD5 		string			`bson:"md5" json:"md5"`
 	Size		int				`bson:"size" json:"size"`
 	Object		string			`bson:"object" json:"object"`

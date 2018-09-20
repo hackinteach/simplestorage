@@ -49,6 +49,7 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 		CreateObject(object)
 
 		w.WriteHeader(http.StatusOK)
+		return
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
 	}
@@ -59,8 +60,9 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 	bucketName := GetBucketName(r)
 	objectName := GetObjectName(r)
 
-	partNumber := r.URL.Query().Get("partNumber")
-	valid := ValidatePattern(partNumber, PartNumPattern)
+	pn := r.URL.Query().Get("partNumber")
+	partNumber,_ := strconv.Atoi(pn)
+	valid := ValidatePattern(pn, PartNumPattern)
 
 	tlength := r.Header.Get("Content-Length")
 	length, lengthErr := strconv.Atoi(tlength)
@@ -75,21 +77,11 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 	/* VALIDATE REQUEST */
 	if !valid {
 		ret["error"] = Error.ErrorPartNumber
-	}
-
-	if lengthErr != nil {
+	} else if lengthErr != nil {
 		ret["error"] = Error.ErrorLength
-	}
-
-	if md5 == "" {
-		ret["error"] = Error.ErrorMD5
-	}
-
-	if !FindObject(bucketName, objectName) {
+	} else if !FindObject(bucketName, objectName) {
 		ret["error"] = Error.ErrorObjectName
-	}
-
-	if !CheckBucketExist(bucketName) {
+	} else if !CheckBucketExist(bucketName) {
 		ret["error"] = Error.ErrorBucket
 	}
 
@@ -106,22 +98,35 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 	//defer b.Close()
 	//checksum, err := WriteFile(f,partNumber,objectName,bucketName)
 
-	path := filepath.Join(fmt.Sprintf("%s/%s/%s/%s",BucketPath,bucketName,objectName,partNumber))
-	f, _ := os.OpenFile(path,os.O_RDWR,0644)
-
+	path := filepath.Join(fmt.Sprintf("%s/%s/%s/%d",BucketPath,bucketName,objectName,partNumber))
+	f, cr := os.Create(path)
 	defer f.Close()
+	if cr != nil {
+		log.Print("Error creating file")
+		log.Print(cr.Error())
+	}
+	b := r.Body;
+	defer b.Close()
+	n, wr := io.Copy(f,b)
 
-	io.Copy(f,r.Body)
-	defer r.Body.Close()
+	if wr != nil {
+		log.Printf("Error writing file\n %s",wr.Error())
+	}else{
+		log.Printf("Written %d bytes",n)
+	}
 
 	checksum := Hash(path)
 
 	if checksum != md5 || md5 == ""{
 		ret["error"] = Error.ErrorMD5
+		log.Print("MD5 error, removing file")
+
 	}
 	//log.Printf("checksum %s",checksum)
 	if ret["error"] != nil {
-
+		if err := os.Remove(path) ; err != nil {
+			log.Printf("ERR REMOVE: %s",err.Error())
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(ret)
@@ -166,7 +171,7 @@ func CompleteUpload(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(ret)
 	}else{
 		o.Completed = true
-		SetObjectComplete(o.Name)
+		SetObjectComplete(o)
 		w.Header().Set("Content-Type","application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(ret)
@@ -176,7 +181,8 @@ func CompleteUpload(w http.ResponseWriter, r *http.Request) {
 func DeletePart(w http.ResponseWriter, r *http.Request) {
 	bucketName := GetBucketName(r)
 	objectName := GetObjectName(r)
-	partNumber := r.URL.Query().Get("partNumber")
+	pn := r.URL.Query().Get("partNumber")
+	partNumber,_ := strconv.Atoi(pn)
 	o, found := GetObject(objectName,bucketName)
 
 	if !found {
@@ -186,14 +192,14 @@ func DeletePart(w http.ResponseWriter, r *http.Request) {
 
 	if 	o.Completed ||
 		!FindObject(bucketName,objectName) ||
-		partNumber == "" ||
+		partNumber == 0 ||
 		!SearchStringArray(o.Part,partNumber) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 	}
 
 	// Remove from dir
-	err := RemovePartFile(bucketName,objectName,partNumber)
+	err := RemovePartFile(bucketName,objectName,pn)
 	if err != nil {
 		w.Write([]byte("Cannot remove part, please try again"))
 		w.WriteHeader(http.StatusBadRequest)
@@ -214,8 +220,9 @@ func DeleteObject(w http.ResponseWriter, r *http.Request) {
 	objectName := GetObjectName(r)
 
 	if FindObject(bucketName,objectName) {
+		o,_ := GetObject(objectName,bucketName)
 		RemoveObjectDirectory(bucketName,objectName)
-		RemoveObject(objectName, bucketName)
+		RemoveObjectDB(o)
 		w.WriteHeader(http.StatusOK)
 	}else{
 		w.WriteHeader(http.StatusBadRequest)
@@ -240,10 +247,20 @@ func DownloadObject(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if hRange != "" {
-		f := File(o)
-		w.Write(f)
+	if hRange == "" {
+		for _,p := range o.Part {
+			part := fmt.Sprintf("%d",p)
+			path := filepath.Join(BucketPath,"/",bucketName,"/",objectName,"/",part)
+			f,err := os.Open(path)
+			if err != nil {
+				log.Print(err.Error())
+			}
+			io.Copy(w,f)
+			f.Close()
+		}
+
 		w.WriteHeader(http.StatusOK)
+		return
 	}else{
 		r,_ := regexp.Compile("([0-9]+)")
 		scope := r.FindAllString(hRange,-1)
