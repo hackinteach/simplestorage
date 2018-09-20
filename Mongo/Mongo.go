@@ -101,7 +101,7 @@ func UpdateObject(o Object)(error){
 	return ObjectCollection.Update(selector,o)
 }
 
-func UpdateObjectPart(objectName string, partName int)(error){
+func PushObjectPart(objectName string, partName int)(error){
 	selector := bson.M{"name":objectName}
 	updater := bson.M{"part":partName}
 	return ObjectCollection.Update(selector,bson.M{"$push": updater})

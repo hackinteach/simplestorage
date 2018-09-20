@@ -10,7 +10,6 @@ import (
 	"os"
 	. "simplestorage/BucketManagement"
 	. "simplestorage/ObjectManagement"
-	"time"
 )
 
 const (
@@ -45,9 +44,9 @@ func main() {
 	srv := &http.Server{
 		Handler:      handlers.LoggingHandler(os.Stdout, router),
 		Addr:         "localhost:8080",
-		WriteTimeout: 15 * time.Second,
-		ReadTimeout:  15 * time.Second,
 	}
 
 	log.Fatal(srv.ListenAndServe())
+	//log.Fatal(http.ListenAndServe("localhost:8080", router))
+
 }

@@ -15,6 +15,7 @@ import (
 	. "simplestorage/Misc"
 	. "simplestorage/Mongo"
 	. "simplestorage/Structure"
+	"sort"
 	"strconv"
 )
 
@@ -132,8 +133,11 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(ret)
 
 	}else{
-		UpdateObjectPart(objectName,partNumber)
+
 		o,_ := GetObject(objectName,bucketName)
+		if !SearchIntArray(o.Part,partNumber){
+			PushObjectPart(objectName,partNumber)
+		}
 		o = UpdatePart(o,partNumber)
 		UpdateObject(o)
 		CreatePart(part)
@@ -193,7 +197,7 @@ func DeletePart(w http.ResponseWriter, r *http.Request) {
 	if 	o.Completed ||
 		!FindObject(bucketName,objectName) ||
 		partNumber == 0 ||
-		!SearchStringArray(o.Part,partNumber) {
+		!SearchIntArray(o.Part,partNumber) {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 	}
@@ -235,6 +239,7 @@ func DownloadObject(w http.ResponseWriter, r *http.Request) {
 
 	if !FindObject(bucketName,objectName){
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	hRange := r.Header.Get("Range")
@@ -248,14 +253,21 @@ func DownloadObject(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if hRange == "" {
-		for _,p := range o.Part {
+		sort.Ints(o.Part)
+		for _, p := range o.Part {
 			part := fmt.Sprintf("%d",p)
 			path := filepath.Join(BucketPath,"/",bucketName,"/",objectName,"/",part)
 			f,err := os.Open(path)
 			if err != nil {
 				log.Print(err.Error())
 			}
-			io.Copy(w,f)
+			n, cop := io.Copy(w,f)
+			if cop != nil {
+				log.Print("Error copying file to response")
+				log.Print(cop.Error())
+			}else{
+				log.Printf("Wrote %d to response",n)
+			}
 			f.Close()
 		}
 
@@ -274,6 +286,7 @@ func DownloadObject(w http.ResponseWriter, r *http.Request) {
 		f := FileRange(o,int64(from),int64(to))
 		w.Write(f)
 		w.WriteHeader(http.StatusOK)
+		return
 	}
 }
 

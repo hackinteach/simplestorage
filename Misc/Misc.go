@@ -97,7 +97,7 @@ func RemovePartFile(bucket string, object string, part string) (Error error) {
 	return os.Remove(path)
 }
 
-func SearchStringArray(arr []int, search int) (bool) {
+func SearchIntArray(arr []int, search int) (bool) {
 	for _, st := range arr {
 		if st == search {
 			return true
