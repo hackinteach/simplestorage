@@ -3,6 +3,7 @@ package Mongo
 import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"log"
 	. "simplestorage/Structure"
 )
 
@@ -49,8 +50,18 @@ func AddBucket(bucket Bucket) (bool) {
 }
 
 func RemoveBucket(name string)(bool){
+	log.Print("Removing bucket")
+	var obj []Object
+	ObjectCollection.Find(bson.M{"bucket":name}).All(&obj)
+
+	for _,o := range obj {
+		PartCollection.RemoveAll(bson.M{"object":o.Name})
+	}
+
+	_, oerr := ObjectCollection.RemoveAll(bson.M{"bucket":name})
 	err := BucketCollection.Remove(bson.M{"name":name})
-	return err == nil
+	log.Print("Done Removing bucket")
+	return err == nil && oerr == nil
 }
 
 func GetReturnBucket(name string)(TempBucket){
@@ -90,7 +101,7 @@ func UpdateObject(o Object)(error){
 	return ObjectCollection.Update(selector,o)
 }
 
-func UpdateObjectPart(objectName string, partName string)(error){
+func UpdateObjectPart(objectName string, partName int)(error){
 	selector := bson.M{"name":objectName}
 	updater := bson.M{"part":partName}
 	return ObjectCollection.Update(selector,bson.M{"$push": updater})
@@ -103,7 +114,7 @@ func FindParts(object string)([]Part){
 	return res
 }
 
-func FindPart(part string)(Part){
+func FindPart(part int)(Part){
 	selector := bson.M{"number": part}
 	var p Part
 	PartCollection.Find(selector).One(&p)
@@ -120,17 +131,21 @@ func GetObject(objectName, bucket string)(Object, bool){
 	return o, false
 }
 
-func SetObjectComplete(objectName string)(error){
-	selector := bson.M{"name":objectName}
-	return ObjectCollection.Update(selector,bson.M{"completed":true})
+func SetObjectComplete(o Object)(error){
+	selector := bson.M{"name":o.Name}
+	updater := bson.M{"completed": o.Completed}
+	return ObjectCollection.Update(selector,bson.M{"$set":updater})
 }
 
-func RemovePart(partNumber string, objcetName string)(error){
-	selector := bson.M{"number":partNumber, "object": objcetName}
+func RemovePart(partNumber int, objectName string)(error){
+	selector := bson.M{"number":partNumber, "object": objectName}
 	return PartCollection.Remove(selector)
 }
 
-func RemoveObject(o, b string) error{
-	selector := bson.M{"name":o, "bucket": b}
+func RemoveObjectDB(o Object) error{
+	selector := bson.M{"name":o.Name, "bucket": o.Bucket}
+	for _,p := range o.Part {
+		PartCollection.RemoveAll(bson.M{"number":p})
+	}
 	return ObjectCollection.Remove(selector)
 }
