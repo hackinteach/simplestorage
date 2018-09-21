@@ -17,6 +17,7 @@ import (
 	. "simplestorage/Structure"
 	"sort"
 	"strconv"
+	"strings"
 )
 
 func CreateTicket(w http.ResponseWriter, r *http.Request) {
@@ -399,5 +400,21 @@ func GetMeta(w http.ResponseWriter, r *http.Request) {
 		return
 	}else{
 		w.WriteHeader(http.StatusNotFound)
+	}
+}
+
+func GetEndPoints(w http.ResponseWriter, r *http.Request) {
+	if len(r.URL.RawQuery) > 0 {
+		splitted := strings.Split(r.URL.RawQuery,"&")
+		if len(splitted) == 1 {
+			GetMeta(w,r)
+		}else if len(splitted) == 2 {
+			GetMetaByKey(w,r)
+		}else {
+			http.Error(w, "BadRouting", http.StatusNotFound)
+			return
+		}
+	} else{
+		DownloadObject(w,r)
 	}
 }

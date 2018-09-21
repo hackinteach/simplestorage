@@ -35,15 +35,15 @@ func main() {
 	router.HandleFunc(buckObj, CompleteUpload).Queries("complete","{complete}").Methods("POST")
 	router.HandleFunc(buckObj, DeletePart).Queries("delete","{delete}","partNumber","{partNumber}").Methods("DELETE")
 	router.HandleFunc(buckObj, DeleteObject).Queries("delete","{delete}").Methods("DELETE")
-	router.HandleFunc(buckObj, DownloadObject).Methods("GET")
+	router.HandleFunc(buckObj, GetEndPoints).Methods("GET")
 	router.HandleFunc(buckObj, UpdateMeta).Queries("metadata","{metadata}","key","{key}").Methods("PUT")
 	router.HandleFunc(buckObj, DeleteMeta).Queries("metadata","{metadata}","key","{key}").Methods("DELETE")
-	router.HandleFunc(buckObj, GetMetaByKey).Queries("metadata","{metadata}","key","{key}").Methods("GET")
-	router.HandleFunc(buckObj, GetMeta).Queries("metadata","{metadata}").Methods("GET")
+	router.HandleFunc(buckObj, GetEndPoints).Queries("metadata","{metadata}","key","{key}").Methods("GET")
+	router.HandleFunc(buckObj, GetEndPoints).Queries("metadata","{metadata}").Methods("GET")
 
 	srv := &http.Server{
 		Handler:      handlers.LoggingHandler(os.Stdout, router),
-		Addr:         "localhost:8080",
+		Addr:         ":8080",
 	}
 
 	log.Fatal(srv.ListenAndServe())

@@ -20,11 +20,14 @@ const (
 
 func init() {
 	var err error
-	session, err = mgo.Dial("localhost")
+	log.Printf("Connecting to MongoDB")
+	session, err = mgo.Dial("mongodb")
 
 	if err != nil {
 		panic(err)
 	}
+
+	log.Printf("DB Connected")
 
 	db := session.DB(DB)
 	BucketCollection = db.C("Bucket")
