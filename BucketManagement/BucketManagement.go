@@ -71,6 +71,7 @@ func ListBucket(w http.ResponseWriter, r *http.Request) {
 	var bucket = GetReturnBucket(bucketName)
 
 	if bucket.Name == "" {
+		w.Header().Set("Content-Type","application/json")
 		w.WriteHeader(http.StatusBadRequest)
 	}
 
