@@ -22,3 +22,5 @@ services:
       - mongodb
     links:
       - mongodb
+    environment:
+      - PROD=DOCKER

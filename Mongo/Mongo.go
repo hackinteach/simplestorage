@@ -4,6 +4,7 @@ import (
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"log"
+	"os"
 	. "simplestorage/Structure"
 )
 
@@ -12,6 +13,7 @@ var (
 	BucketCollection *mgo.Collection
 	ObjectCollection *mgo.Collection
 	PartCollection 	 *mgo.Collection
+	DB_SERVER		 string
 )
 
 const (
@@ -20,8 +22,17 @@ const (
 
 func init() {
 	var err error
+
+	env, f := os.LookupEnv("PROD")
+	if f && env == "DOCKER"{
+		DB_SERVER = "mongodb"
+	}else{
+		DB_SERVER = "localhost"
+	}
+
 	log.Printf("Connecting to MongoDB")
-	session, err = mgo.Dial("mongodb")
+
+	session, err = mgo.Dial(DB_SERVER)
 
 	if err != nil {
 		panic(err)

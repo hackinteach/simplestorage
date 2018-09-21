@@ -1,6 +1,7 @@
 FROM golang:1.11
 
 WORKDIR /simplestorage
+ENV PROD=DOCKER
 
 ADD . .
 ARG GO111MODULE=on
