@@ -156,15 +156,17 @@ func Etag(o Structure.Object) string {
 func Length(o Structure.Object) int {
 	length := 0
 	for _,v := range o.Part {
-		p := Mongo.FindPart(v)
+		p := Mongo.FindPart(v, o.Name, o.Bucket)
 		length += p.Size
 	}
 	return length
 }
 
 func UpdatePart(o Structure.Object, part int) Structure.Object {
-	o.Part = append(o.Part,part)
-	sort.Ints(o.Part)
+	if !SearchIntArray(o.Part,part){
+		o.Part = append(o.Part,part)
+		sort.Ints(o.Part)
+	}
 	return o
 }
 

@@ -44,6 +44,7 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 		temp["created"] = GetTime()
 		temp["modified"] = GetTime()
 		temp["meta"] = make(map[string]interface{})
+		temp["byte"] = -1
 
 		mapstructure.Decode(temp, &object)
 		log.Print(object)
@@ -86,19 +87,6 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 		ret["error"] = Error.ErrorBucket
 	}
 
-
-	/* PERFORM REQUEST */
-	var part Part
-	part.Number = partNumber
-	part.MD5 = md5
-	part.Size = length
-	part.Object = objectName
-
-	//b := r.Body
-	//f, _ := ioutil.ReadAll(b)
-	//defer b.Close()
-	//checksum, err := WriteFile(f,partNumber,objectName,bucketName)
-
 	path := filepath.Join(fmt.Sprintf("%s/%s/%s/%d",BucketPath,bucketName,objectName,partNumber))
 	f, cr := os.Create(path)
 	defer f.Close()
@@ -121,7 +109,6 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 	if checksum != md5 || md5 == ""{
 		ret["error"] = Error.ErrorMD5
 		log.Print("MD5 error, removing file")
-
 	}
 	//log.Printf("checksum %s",checksum)
 	if ret["error"] != nil {
@@ -135,11 +122,22 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 	}else{
 
 		o,_ := GetObject(objectName,bucketName)
+		part := Part{
+			Number : partNumber,
+			MD5: md5,
+			Size: length,
+			Object: objectName,
+			Bucket: bucketName,
+		}
+
 		if !SearchIntArray(o.Part,partNumber){
 			PushObjectPart(objectName,partNumber)
 		}
 		o = UpdatePart(o,partNumber)
 		UpdateObject(o)
+
+		/* PERFORM REQUEST */
+
 		CreatePart(part)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
@@ -283,8 +281,51 @@ func DownloadObject(w http.ResponseWriter, r *http.Request) {
 		}else{
 			to = Length(o)
 		}
-		f := FileRange(o,int64(from),int64(to))
-		w.Write(f)
+
+		wrote := 0
+		readSoFar := 0
+
+		log.Printf("Range: %d - %d",from,to)
+		for _,p:= range o.Part {
+			path := filepath.Join(BucketPath,"/",bucketName,"/",objectName,"/",fmt.Sprintf("%d",p))
+			f,_ := os.Open(path)
+			part := FindPart(p,objectName,bucketName)
+			//info, _ := f.Stat()
+			//size := info.Size()
+			log.Printf("======Part: %d======",p)
+			pstart := readSoFar
+			pend := readSoFar+part.Size
+
+			log.Printf("Start: %d | End: %d",pstart,pend)
+
+			if pend >= to && pstart <= from {
+				actualStart := from-wrote-readSoFar
+				//actualEnd := pend-wrote
+				log.Printf("ActualStart: %d",actualStart)
+				f.Seek(int64(actualStart),0)
+				n,err := io.CopyN(w,f,int64(to-from+1))
+				if err != nil{
+					log.Print(err.Error())
+				}
+				log.Printf("Bytes wrote : %d",n)
+				wrote += int(n)
+			}else if pend >= from && pend <= to{
+				//actualStart := from-pend // from end
+				actualStart := from-pstart // from beginning
+				log.Printf("ActualStart: %d",actualStart)
+				f.Seek(int64(actualStart),0)
+				n,err := io.CopyN(w,f,int64(to-from+1))
+				if err != nil{
+					log.Print(err.Error())
+				}
+				log.Printf("Bytes wrote : %d",n)
+				wrote += int(n)
+			}
+
+			readSoFar += part.Size
+			f.Close()
+		}
+
 		w.WriteHeader(http.StatusOK)
 		return
 	}

@@ -23,9 +23,9 @@ type Object struct {
 	Name 		string			`bson:"name" json:"name" mapstructure:"name"`
 	Bucket		string			`bson:"bucket" json:"bucket" mapstructure:"bucket"`
 	Completed	bool			`bson:"completed" json:"completed" mapstructure:"completed"`
-	Created 	int64			`bson:"created" json:"created mapstructure:"created"`
+	Created 	int64			`bson:"created" json:"created" mapstructure:"created"`
 	Modified 	int64			`bson:"modified" json:"modified" mapstructure:"modified"`
-	Part		[]int		`bson:"part" json:"part" mapstructure:"part"`
+	Part		[]int			`bson:"part" json:"part" mapstructure:"part"`
 	Meta		map[string]interface{} `bson:"meta" json:"meta" mapstructure:"meta"`
 }
 
@@ -37,11 +37,12 @@ type TempObject struct {
 }
 
 type Part struct {
-	ID			bson.ObjectId	`bson:"_id,omitempty"`
-	Number 		int			`bson:"number" json:"number"`
-	MD5 		string			`bson:"md5" json:"md5"`
-	Size		int				`bson:"size" json:"size"`
-	Object		string			`bson:"object" json:"object"`
+	ID				bson.ObjectId	`bson:"_id,omitempty"`
+	Number 			int				`bson:"number" json:"number"`
+	MD5 			string			`bson:"md5" json:"md5"`
+	Size			int				`bson:"size" json:"size"`
+	Object			string			`bson:"object" json:"object"`
+	Bucket			string 			`bson:"bucket" json:"bucket"`
 }
 
 const PartNumPattern = `^([1-9][0-9]{0,3}|10000)$`

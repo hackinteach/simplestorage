@@ -97,8 +97,12 @@ func CreatePart(part Part)(bool){
 }
 
 func UpdateObject(o Object)(error){
-	selector := bson.M{"object":o.Name}
-	return ObjectCollection.Update(selector,o)
+	selector := bson.M{"name":o.Name}
+	err := ObjectCollection.Update(selector,o)
+	if err != nil {
+		log.Print(err.Error())
+	}
+	return err
 }
 
 func PushObjectPart(objectName string, partName int)(error){
@@ -114,8 +118,8 @@ func FindParts(object string)([]Part){
 	return res
 }
 
-func FindPart(part int)(Part){
-	selector := bson.M{"number": part}
+func FindPart(part int, objectName, bucketName string)(Part){
+	selector := bson.M{"number": part,"object": objectName, "bucket":bucketName}
 	var p Part
 	PartCollection.Find(selector).One(&p)
 	return p
