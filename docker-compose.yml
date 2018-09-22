@@ -15,9 +15,10 @@ services:
     build: ./
     container_name: simple-storage
     ports: 
-      - "8080:8080"
+      - "8080:3000"
     volumes:
       - ./buckets:/simplestorage/buckets:rw
+      - ./:/simplestorage
     depends_on:
       - mongodb
     links:
