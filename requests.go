@@ -154,7 +154,7 @@ func DeletePartObjectRequest(expectedstatuscode int,bucketname string,objectname
 		ExpectedStatusCode: expectedstatuscode,
 		Method: "DELETE",
 		Query: map[string]string{"partNumber":strconv.Itoa(partnumber)},
-		Endpoint: ObjectManagement.CompleteUpload,
+		Endpoint: ObjectManagement.DeletePart,
 		Headers: map[string]string{},
 		Body: nil,
 	}

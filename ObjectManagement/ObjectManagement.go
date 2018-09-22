@@ -24,10 +24,11 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 	bucketName := GetBucketName(r)
 	objectName := GetObjectName(r)
 
-	//if !ValidatePattern(objectName,ObjNamePattern) {
-	//	w.WriteHeader(http.StatusBadRequest)
-	//	return
-	//}
+	if !ValidatePattern(objectName,ObjNamePattern) {
+		log.Print("Invalid Object Name")
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
 
 	buckExist := CheckBucketExist(bucketName)
 	objExist := FindObject(bucketName,objectName)
@@ -48,13 +49,14 @@ func CreateTicket(w http.ResponseWriter, r *http.Request) {
 		temp["byte"] = -1
 
 		mapstructure.Decode(temp, &object)
-		log.Print(object)
+		//log.Print(object)
 		CreateObject(object)
 
 		w.WriteHeader(http.StatusOK)
 		return
 	} else {
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 }
 
@@ -119,7 +121,7 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(ret)
-
+		return
 	}else{
 
 		o,_ := GetObject(objectName,bucketName)
@@ -143,7 +145,7 @@ func UploadPart(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(ret)
-
+		return
 	}
 }
 
@@ -152,32 +154,32 @@ func CompleteUpload(w http.ResponseWriter, r *http.Request) {
 	objectName := GetObjectName(r)
 	o, _ := GetObject(objectName, bucketName)
 
-	//tl := r.Header.Get("Content-Length")
-	//totalLength,_ := strconv.Atoi(tl)
-	//etag := r.Header.Get("Content-MD5")
-
 	ret := map[string]interface{}{
 		"name": objectName,
 		"eTag" : Etag(o),
 		"length": Length(o),
 	}
 
-	if !CheckBucketExist(bucketName) {
+	if bucketName == "" || !CheckBucketExist(bucketName) {
 		ret["error"] = 	Error.ErrorBucket
 	}else if !FindObject(bucketName,objectName) {
 		ret["error"] = Error.ErrorObjectName
 	}
 
-	if ret["error"] != nil {
+	if ret["error"] != nil || ret["error"] != ""{
+		log.Print("Cannot complete object")
 		w.Header().Set("Content-Type","application/json")
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(ret)
+		return
 	}else{
+		log.Printf("Completed object : %s",objectName)
 		o.Completed = true
 		SetObjectComplete(o)
 		w.Header().Set("Content-Type","application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(ret)
+		return
 	}
 }
 
@@ -187,7 +189,7 @@ func DeletePart(w http.ResponseWriter, r *http.Request) {
 	pn := r.URL.Query().Get("partNumber")
 	partNumber,_ := strconv.Atoi(pn)
 	o, found := GetObject(objectName,bucketName)
-
+	//log.Printf("DELETING: %s/%s",bucketName,objectName)
 	if !found {
 		w.WriteHeader(http.StatusBadRequest)
 		return
@@ -195,8 +197,9 @@ func DeletePart(w http.ResponseWriter, r *http.Request) {
 
 	if 	o.Completed ||
 		!FindObject(bucketName,objectName) ||
-		partNumber == 0 ||
+		!ValidatePattern(pn,PartNumPattern) ||
 		!SearchIntArray(o.Part,partNumber) {
+			//log.Printf("FAILED Partnumber: %s",pn)
 			w.WriteHeader(http.StatusBadRequest)
 			return
 	}
@@ -216,6 +219,7 @@ func DeletePart(w http.ResponseWriter, r *http.Request) {
 	// Remove part from Part Collection
 	RemovePart(partNumber,objectName)
 	w.WriteHeader(http.StatusOK)
+	return
 }
 
 func DeleteObject(w http.ResponseWriter, r *http.Request) {
@@ -227,8 +231,10 @@ func DeleteObject(w http.ResponseWriter, r *http.Request) {
 		RemoveObjectDirectory(bucketName,objectName)
 		RemoveObjectDB(o)
 		w.WriteHeader(http.StatusOK)
+		return
 	}else{
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 }
 
@@ -302,24 +308,24 @@ func DownloadObject(w http.ResponseWriter, r *http.Request) {
 			if pend >= to && pstart <= from {
 				actualStart := from-wrote-readSoFar
 				//actualEnd := pend-wrote
-				log.Printf("ActualStart: %d",actualStart)
+				//log.Printf("ActualStart: %d",actualStart)
 				f.Seek(int64(actualStart),0)
 				n,err := io.CopyN(w,f,int64(to-from+1))
 				if err != nil{
 					log.Print(err.Error())
 				}
-				log.Printf("Bytes wrote : %d",n)
+				//log.Printf("Bytes wrote : %d",n)
 				wrote += int(n)
 			}else if pend >= from && pend <= to{
 				//actualStart := from-pend // from end
 				actualStart := from-pstart // from beginning
-				log.Printf("ActualStart: %d",actualStart)
+				//log.Printf("ActualStart: %d",actualStart)
 				f.Seek(int64(actualStart),0)
 				n,err := io.CopyN(w,f,int64(to-from+1))
 				if err != nil{
 					log.Print(err.Error())
 				}
-				log.Printf("Bytes wrote : %d",n)
+				//log.Printf("Bytes wrote : %d",n)
 				wrote += int(n)
 			}
 
@@ -335,6 +341,7 @@ func DownloadObject(w http.ResponseWriter, r *http.Request) {
 func UpdateMeta(w http.ResponseWriter, r *http.Request) {
 	bucketName := GetBucketName(r)
 	objectName := GetObjectName(r)
+	//log.Printf("Meta : %s/%s",bucketName,objectName)
 	key := r.URL.Query().Get("key")
 	b := r.Body
 	f, _ := ioutil.ReadAll(b)
@@ -348,6 +355,7 @@ func UpdateMeta(w http.ResponseWriter, r *http.Request) {
 		return
 	}else{
 		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 }
 
@@ -366,6 +374,7 @@ func DeleteMeta(w http.ResponseWriter, r *http.Request) {
 		return
 	}else{
 		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 }
 
@@ -385,6 +394,7 @@ func GetMetaByKey(w http.ResponseWriter, r *http.Request) {
 		return
 	}else{
 		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 }
 
@@ -400,6 +410,7 @@ func GetMeta(w http.ResponseWriter, r *http.Request) {
 		return
 	}else{
 		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 }
 

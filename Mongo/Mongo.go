@@ -38,7 +38,7 @@ func init() {
 		panic(err)
 	}
 
-	log.Printf("DB Connected")
+	log.Printf("Connected to MongoDB")
 
 	db := session.DB(DB)
 	BucketCollection = db.C("Bucket")
@@ -64,7 +64,7 @@ func AddBucket(bucket Bucket) (bool) {
 }
 
 func RemoveBucket(name string)(bool){
-	log.Print("Removing bucket")
+	//log.Print("Removing bucket")
 	var obj []Object
 	ObjectCollection.Find(bson.M{"bucket":name}).All(&obj)
 
@@ -74,12 +74,12 @@ func RemoveBucket(name string)(bool){
 
 	_, oerr := ObjectCollection.RemoveAll(bson.M{"bucket":name})
 	err := BucketCollection.Remove(bson.M{"name":name})
-	log.Print("Done Removing bucket")
+	//log.Print("Done Removing bucket")
 	return err == nil && oerr == nil
 }
 
-func GetReturnBucket(name string)(TempBucket){
-	var result TempBucket
+func GetReturnBucket(name string)(Bucket){
+	var result Bucket
 	BucketCollection.Find(bson.M{"name":name}).One(&result)
 	return result
 }
@@ -140,7 +140,7 @@ func FindPart(part int, objectName, bucketName string)(Part){
 }
 
 func GetObject(objectName, bucket string)(Object, bool){
-	selector := bson.M{"name":objectName}
+	selector := bson.M{"name":objectName,"bucket":bucket}
 	var o Object
 	ObjectCollection.Find(selector).One(&o)
 	if o.Bucket == bucket{

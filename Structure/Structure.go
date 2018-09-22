@@ -46,5 +46,5 @@ type Part struct {
 }
 
 const PartNumPattern = `^([1-9][0-9]{0,3}|10000)$`
-const ObjNamePattern = `^(?!\.).[ \. | \_ | -| a-z | 0-9]*`
-const BuckNamePattern = `(^(?!\.)([a-z|1-9|\-|\_]){2,})`
+const ObjNamePattern = "(^[-_a-zA-Z0-9]{1}[-._a-zA-Z0-9]*[-_a-zA-Z0-9]{1}$|^[-_a-zA-Z0-9]{1}$)"
+const BuckNamePattern = "^[-_a-zA-Z0-9]+$"

@@ -81,7 +81,7 @@ func HandleError(t *testing.T,err error){
 }
 
 func TestBucketEndpoints(t *testing.T){
-	HandleError(t,ExecuteRequest(DeleteBucketRequest(http.StatusBadRequest,"/automated")))
+	//HandleError(t,ExecuteRequest(DeleteBucketRequest(http.StatusBadRequest,"/automated")))
 	HandleError(t,ExecuteRequest(ListBucketRequest(http.StatusBadRequest,"/automated")))
 	HandleError(t,ExecuteRequest(CreateBucketRequest(http.StatusOK,"/automated")))
 	HandleError(t,ExecuteRequest(ListBucketRequest(http.StatusOK,"/automated")))

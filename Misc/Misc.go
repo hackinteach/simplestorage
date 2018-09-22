@@ -5,7 +5,6 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
-	"github.com/gorilla/mux"
 	"io"
 	"io/ioutil"
 	"log"
@@ -38,7 +37,7 @@ func MakeBucketDirectory(name string) (bool) {
 	//log.Printf("path: %s",fullPath)
 	err := os.MkdirAll(fullPath, 0755)
 	//exec.Command("chmod", "777", fullPath).Run()
-	log.Print("MKDIR")
+	//log.Print("MKDIR")
 	return err == nil
 }
 
@@ -61,11 +60,25 @@ func RemoveBucketDirectory(name string) (bool) {
 }
 
 func GetBucketName(r *http.Request) (string) {
-	return strings.ToLower(mux.Vars(r)["bucketName"])
+	split := strings.Split(r.URL.Path,"/")
+	if len(split) < 2 {
+		log.Print("Bucket name not specified")
+		return ""
+	}else if ValidatePattern(split[1],Structure.BuckNamePattern){
+		return split[1]
+	}
+	return ""
 }
 
 func GetObjectName(r *http.Request) (string) {
-	return strings.ToLower(mux.Vars(r)["objectName"])
+	split := strings.Split(r.URL.Path,"/")
+	if len(split) < 2 {
+		log.Print("Bucket name not specified")
+		return ""
+	}else if ValidatePattern(split[2],Structure.ObjNamePattern){
+		return split[2]
+	}
+	return ""
 }
 
 /**
@@ -228,6 +241,6 @@ func Hash(path string)string {
 	}
 
 	sum := hasher.Sum(nil)
-	log.Printf("%x",sum)
+	//log.Printf("%x",sum)
 	return fmt.Sprintf("%x",sum)
 }
