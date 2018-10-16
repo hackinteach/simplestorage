@@ -1,0 +1,7 @@
+---
+
+name : server
+description: config
+
+variables:
+  host: http://localhost:8080

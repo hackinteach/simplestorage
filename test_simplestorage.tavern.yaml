@@ -1,0 +1,103 @@
+---
+test_name: BASIC Bucket Flow
+
+includes:
+  - !include server.yaml
+
+stages:
+  - name: DELETE 1
+    request:
+      url: "{host}/bucket1?delete"
+      method: DELETE
+    response:
+      status_code: 400
+
+  - name: LIST 1
+    request:
+      url: "{host}/bucket1?list"
+      method: GET
+    response:
+      status_code: 400
+
+  - name : Create B1
+    request:
+      url: "{host}/bucket1?create"
+      method: POST
+    response:
+      status_code: 200
+      body:
+        "name": bucket1
+
+  - name: Create FL
+    request:
+      url: "{host}/bucket1?create"
+      method: POST
+      response:
+        status_code: 400
+
+  - name : List
+    request:
+      url: "{host}/bucket1?list"
+      method: GET
+    response:
+      status_code: 200
+      body:
+        "name": "bucket1"
+        "objects": []
+
+  - name: List
+    request:
+      url: "{host}/buss?list"
+      method: GET
+    response:
+      status_code: 400
+
+  - name: Delete SC
+    request:
+      url: "{host}/bucket1?delete"
+      method: DELETE
+    response:
+      status_code: 200
+
+  - name: DELETE FL
+    request:
+      url: "{host}/bucket2?delete"
+      method: DELETE
+    response:
+      status_code: 400
+
+  - name: LIST FL
+    request:
+      url: "{host}/bucket1?list"
+      method: GET
+    response:
+      status_code: 400
+---
+
+test_name: Simple Object Flow
+
+stages:
+  - name: Create B1
+    request:
+      url: "{host}/b1?create"
+      method: POST
+    response:
+      status_code: 200
+      body:
+        "name": b1
+
+  - name: Create O1
+    request:
+      url: "{host}/b1/o1?create"
+      method: POST
+    response:
+      status_code: 200
+
+  - name: Create FL
+    request:
+      url: "{host}/b1/o1?create"
+      method: POST
+    response:
+      status_code: 400
+
+  - name: Add Meta
